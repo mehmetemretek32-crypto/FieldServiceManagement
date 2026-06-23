@@ -1,0 +1,6 @@
+@FSM.WebAPI_HostAddress = http://localhost:5030
+
+GET {{FSM.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
