@@ -1,4 +1,10 @@
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Altyapı (Infrastructure) katmanındaki AppDbContext'i ve SQL Server'ı sisteme tanıtıyoruz
+builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 
