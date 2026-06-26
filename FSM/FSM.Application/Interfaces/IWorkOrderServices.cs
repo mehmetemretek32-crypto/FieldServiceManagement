@@ -1,4 +1,5 @@
 ﻿using FSM.Application.DTOs.WorkOrders;
+using FSM.Application.DTOs;
 
 namespace FSM.Application.Interfaces;
 
@@ -13,4 +14,9 @@ public interface IWorkOrderService
 
     // Dışarıdan "Sipariş Fişi" (CreateWorkOrderDto) alır, veritabanına ekleyip yeni ID'sini döner
     Task<int> CreateWorkOrderAsync(CreateWorkOrderDto dto);
+
+    Task AssignWorkOrderAsync(AssignWorkOrderDto dto);
 }
+
+
+  

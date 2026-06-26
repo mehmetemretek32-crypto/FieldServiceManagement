@@ -8,4 +8,6 @@ public class Technician : BaseEntity
     public string Email { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public bool IsAvailable { get; set; } = true; // Teknisyen o an boşta mı?
+    public bool IsDeleted { get; set; } = false;
+
 }
