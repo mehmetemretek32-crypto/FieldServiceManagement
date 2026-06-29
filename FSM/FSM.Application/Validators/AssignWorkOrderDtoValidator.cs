@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using FSM.Application.DTOs;
+using FSM.Application.DTOs.WorkOrders;
 
 namespace FSM.Application.Validators
 {

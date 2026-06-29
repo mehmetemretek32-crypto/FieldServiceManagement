@@ -16,6 +16,8 @@ public interface IWorkOrderService
     Task<int> CreateWorkOrderAsync(CreateWorkOrderDto dto);
 
     Task AssignWorkOrderAsync(AssignWorkOrderDto dto);
+
+    Task UpdateWorkOrderAsync(UpdateWorkOrderDto dto);
 }
 
 

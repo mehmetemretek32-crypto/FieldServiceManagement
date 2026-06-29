@@ -52,6 +52,13 @@ namespace FSM.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = newId }, newId);
         }
 
+        [HttpPut]
+        public async Task<IActionResult> UpdateWorkOrder([FromBody] UpdateWorkOrderDto dto)
+        {
+            await _service.UpdateWorkOrderAsync(dto);
+            return Ok(new { message = "İş emri başarıyla güncellendi!" });
+        }
+
         // --- YENİ EKLENEN ATAMA ENDPOINT'İ ---
         [HttpPost("assign")]
         public async Task<IActionResult> AssignWorkOrder([FromBody] AssignWorkOrderDto dto)
@@ -61,5 +68,7 @@ namespace FSM.WebAPI.Controllers
 
             return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
         }
+
+
     }
 }

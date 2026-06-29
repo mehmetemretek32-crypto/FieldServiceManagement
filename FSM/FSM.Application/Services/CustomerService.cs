@@ -1,6 +1,8 @@
 ﻿using FSM.Application.DTOs;
+using FSM.Application.DTOs.Customer;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
+using AutoMapper;
 // Kendi projendeki Repository namespace'ini buraya eklemeyi unutma (örn: using FSM.Infrastructure.Repositories;)
 
 namespace FSM.Application.Services;
@@ -9,10 +11,11 @@ public class CustomerService : ICustomerService
 {
     // Veritabanı işlemleri için Repository bağımlılığını (Dependency Injection) alıyoruz
     private readonly IGenericRepository<Customer> _customerRepository;
-
-    public CustomerService(IGenericRepository<Customer> customerRepository)
+    private readonly IMapper _mapper;
+    public CustomerService(IGenericRepository<Customer> customerRepository, IMapper mapper)
     {
         _customerRepository = customerRepository;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
@@ -72,24 +75,17 @@ public class CustomerService : ICustomerService
         return newCustomer.Id;
     }
 
-    public async Task UpdateCustomerAsync(int id, CreateCustomerDto updateCustomerDto)
+    public async Task UpdateCustomerAsync(UpdateCustomerDto dto)
     {
-        var customer = await _customerRepository.GetByIdAsync(id);
+        var customer = await _customerRepository.GetByIdAsync(dto.Id);
 
-        if (customer == null || customer.IsDeleted)
-        {
-            throw new Exception($"Güncellenmek istenen müşteri bulunamadı (ID: {id}).");
-        }
+        if (customer == null)
+            throw new Exception("Güncellenmek istenen müşteri bulunamadı!");
 
-        // Yeni bilgileri var olan entity'nin üzerine yazıyoruz
-        customer.FirstName = updateCustomerDto.FirstName;
-        customer.LastName = updateCustomerDto.LastName;
-        customer.CompanyName = updateCustomerDto.CompanyName;
-        customer.PhoneNumber = updateCustomerDto.PhoneNumber;
-        customer.Email = updateCustomerDto.Email;
-        customer.Address = updateCustomerDto.Address;
+        _mapper.Map(dto, customer); // DTO'daki yeni verileri eski müşterinin üstüne dök
 
         await _customerRepository.UpdateAsync(customer);
+        await _customerRepository.SaveChangesAsync();
     }
 
     public async Task DeleteCustomerAsync(int id)
