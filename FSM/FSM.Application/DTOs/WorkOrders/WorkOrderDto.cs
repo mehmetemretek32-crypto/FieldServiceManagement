@@ -5,5 +5,6 @@ public record WorkOrderDto(
     string Title,
     string Description,
     string State,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int CustomerId
 );

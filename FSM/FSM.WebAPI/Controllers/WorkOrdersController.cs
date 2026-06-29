@@ -56,20 +56,10 @@ namespace FSM.WebAPI.Controllers
         [HttpPost("assign")]
         public async Task<IActionResult> AssignWorkOrder([FromBody] AssignWorkOrderDto dto)
         {
-            try
-            {
-                // DÜZELTİLDİ: '_workOrdersService' yerine senin tanımladığın '_service' ismini kullandık
-                await _service.AssignWorkOrderAsync(dto);
+            // Try-Catch yok! Kod patlarsa kapıdaki Bodyguard (Middleware) yakalayacak.
+            await _service.AssignWorkOrderAsync(dto);
 
-                // Eğer hata fırlatmadan buraya kadar gelirse işlem başarılıdır (200 OK)
-                return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
-            }
-            catch (Exception ex)
-            {
-                // Servisteki o yazdığımız Türkçe hataları (Exception) burada yakalayıp
-                // Angular'a veya Swagger'a 400 Bad Request olarak fırlatıyoruz
-                return BadRequest(new { Error = ex.Message });
-            }
+            return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
         }
     }
 }
