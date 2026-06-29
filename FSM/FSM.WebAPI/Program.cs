@@ -1,11 +1,13 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using FSM.Application;
 using FSM.Application.Interfaces;
 using FSM.Application.Services;
+using FSM.Application.Validators;
 using FSM.Domain.Interfaces;
 using FSM.Infrastructure.Repositories;
+using FSM.WebAPI.Middlewares;
 using Microsoft.EntityFrameworkCore;
-using FluentValidation;
-using FSM.Application.Validators;
-using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,7 @@ builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IWorkOrderService, WorkOrdersService>();
 builder.Services.AddScoped<ITechnicianService, TechnicianService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 // --- 3. CONTROLLER (GARSON) VE SWAGGER (VİTRİN) KAYITLARI ---
 builder.Services.AddControllers();
@@ -26,9 +29,10 @@ builder.Services.AddSwaggerGen(); // O meşhur yeşil arayüzün mimarı!
 
 // Kapıdaki Bodyguard'ı (Validator) sisteme tanıtıyoruz
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTechnicianDtoValidator>();
+builder.Services.AddApplicationServices();
 
-var app = builder.Build(); // <-- Eksik olan 'var' eklendi!
-
+var app = builder.Build();
+app.UseMiddleware<ExceptionMiddleware>();
 // --- 4. HTTP İSTEK HATTI (PIPELINE) ---
 if (app.Environment.IsDevelopment())
 {

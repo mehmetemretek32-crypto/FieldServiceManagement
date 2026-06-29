@@ -1,9 +1,10 @@
-﻿namespace FSM.Application.DTOs.WorkOrders;
+﻿namespace FSM.Application.DTOs;
 
-public record CreateWorkOrderDto(
-    string Title,
-    string Description
-);
-//İçinde tarih veya ID yoktur, çünkü onları arka planda sistemin kendisi halleder.
-//Dışarıdan sadece gerekli olan minimum bilgiyi almak için bu paketi kullanırız
-//record kullanma sebebimiz değitirlemez olması ve Ram de az yer kaplaması
+public class CreateWorkOrderDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+
+    // Müşteriyle bağlantı kurmamızı sağlayacak kapı:
+    public int CustomerId { get; set; }
+}
