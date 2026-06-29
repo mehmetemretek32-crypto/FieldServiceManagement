@@ -1,4 +1,5 @@
 ﻿using FSM.Application.DTOs;
+using FSM.Application.DTOs.Customer;
 
 namespace FSM.Application.Services; 
 
@@ -14,7 +15,7 @@ public interface ICustomerService
     Task<int> CreateCustomerAsync(CreateCustomerDto createCustomerDto);
 
     // 4. Mevcut bir müşteriyi güncelle (ID ve yeni bilgileri alarak)
-    Task UpdateCustomerAsync(int id, CreateCustomerDto updateCustomerDto);
+    Task UpdateCustomerAsync(UpdateCustomerDto dto); // Eski (int id, CreateCustomerDto dto) silindi
 
     // 5. Müşteriyi sistemden sil (Geçen hafta yaptığımız Soft Delete mantığıyla)
     Task DeleteCustomerAsync(int id);

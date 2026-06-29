@@ -1,5 +1,6 @@
 ﻿using FSM.Application.DTOs;
-using FSM.Application.Services;
+using FSM.Application.DTOs.Customer;
+using FSM.Application.Services; // Veya senin ICustomerService namespace'in hangisiyse
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSM.WebAPI.Controllers;
@@ -25,16 +26,8 @@ public class CustomersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var customer = await _customerService.GetCustomerByIdAsync(id);
-            return Ok(customer);
-        }
-        catch (Exception ex)
-        {
-            // Servisten fırlattığımız "Müşteri bulunamadı" hatalarını burada 400 Bad Request ile yakalıyoruz
-            return BadRequest(new { error = ex.Message });
-        }
+        var customer = await _customerService.GetCustomerByIdAsync(id);
+        return Ok(customer);
     }
 
     [HttpPost]
@@ -44,31 +37,17 @@ public class CustomersController : ControllerBase
         return Ok(new { message = "Müşteri başarıyla oluşturuldu.", id = newCustomerId });
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] CreateCustomerDto dto)
+    [HttpPut] // WorkOrder ile simetrik hale getirdik
+    public async Task<IActionResult> Update([FromBody] UpdateCustomerDto dto)
     {
-        try
-        {
-            await _customerService.UpdateCustomerAsync(id, dto);
-            return Ok(new { message = "Müşteri başarıyla güncellendi." });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        await _customerService.UpdateCustomerAsync(dto);
+        return Ok(new { message = "Müşteri başarıyla güncellendi." });
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            await _customerService.DeleteCustomerAsync(id);
-            return Ok(new { message = "Müşteri başarıyla sistemden pasife çekildi." });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        await _customerService.DeleteCustomerAsync(id);
+        return Ok(new { message = "Müşteri başarıyla sistemden pasife çekildi." });
     }
 }

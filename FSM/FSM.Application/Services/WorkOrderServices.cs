@@ -7,7 +7,6 @@ using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FSM.Application.Services
@@ -28,6 +27,8 @@ namespace FSM.Application.Services
             _mapper = mapper;
         }
 
+        // --- 1. SORGULAMA METOTLARI (READ) ---
+
         public async Task<IEnumerable<WorkOrderDto>> GetAllWorkOrdersAsync()
         {
             var workOrders = await _workOrderRepository.GetAllAsync();
@@ -36,18 +37,18 @@ namespace FSM.Application.Services
 
         public async Task<WorkOrderDto> GetWorkOrderByIdAsync(int id)
         {
-            var w = await _workOrderRepository.GetByIdAsync(id);
-            if (w == null) return null;
+            var workOrder = await _workOrderRepository.GetByIdAsync(id);
+            if (workOrder == null) return null;
 
-            return _mapper.Map<WorkOrderDto>(w);
+            return _mapper.Map<WorkOrderDto>(workOrder);
         }
+
+        // --- 2. YÖNETİM METOTLARI (WRITE) ---
 
         public async Task<int> CreateWorkOrderAsync(CreateWorkOrderDto dto)
         {
-            // AutoMapper ile DTO'dan Entity'ye dönüşüm
             var entity = _mapper.Map<WorkOrder>(dto);
 
-            // Otomatik atanan alanlar
             entity.CreatedAt = DateTime.UtcNow;
             entity.State = WorkOrderState.Pending;
 
@@ -55,6 +56,20 @@ namespace FSM.Application.Services
             await _workOrderRepository.SaveChangesAsync();
 
             return entity.Id;
+        }
+
+        public async Task UpdateWorkOrderAsync(UpdateWorkOrderDto dto)
+        {
+            var workOrder = await _workOrderRepository.GetByIdAsync(dto.Id);
+
+            if (workOrder == null)
+                throw new Exception($"ID'si {dto.Id} olan iş emri bulunamadı!");
+
+            // DTO'daki yeni verileri, hafızadaki mevcut nesnenin üstüne yazıyoruz
+            _mapper.Map(dto, workOrder);
+
+            await _workOrderRepository.UpdateAsync(workOrder);
+            await _workOrderRepository.SaveChangesAsync();
         }
 
         public async Task AssignWorkOrderAsync(AssignWorkOrderDto dto)
@@ -74,7 +89,6 @@ namespace FSM.Application.Services
             if (!technician.IsAvailable)
                 throw new Exception($"{technician.FullName} adlı teknisyen şu an müsait değil.");
 
-            // Atama İşlemi
             workOrder.TechnicianId = technician.Id;
             workOrder.State = WorkOrderState.Assigned;
             technician.IsAvailable = false;
