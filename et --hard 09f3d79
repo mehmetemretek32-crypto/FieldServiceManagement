@@ -1,0 +1,44 @@
+[33m2775b34[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/cqrs-migration[m[33m, [m[1;31morigin/feat/customer-module[m[33m, [m[1;32mfeat/customer-module[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33m2775b34[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/cqrs-migration[m[33m, [m[1;31morigin/feat/customer-module[m[33m, [m[1;32mfeat/customer-module[m[33m)[m HEAD@{1}: checkout: moving from feat/customer-module to feature/cqrs-migration
+[33m2775b34[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/cqrs-migration[m[33m, [m[1;31morigin/feat/customer-module[m[33m, [m[1;32mfeat/customer-module[m[33m)[m HEAD@{2}: commit: fix: implemented customer update validation and aligned mapping profile symmetry
+[33m519c7ce[m HEAD@{3}: checkout: moving from main to feat/customer-module
+[33m9e6a763[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{4}: checkout: moving from feat/customer-module to main
+[33m519c7ce[m HEAD@{5}: commit: refactor: implemented AutoMapper, FluentValidation and Global Exception Middleware
+[33m9e6a763[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{6}: checkout: moving from main to feat/customer-module
+[33m9e6a763[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{7}: pull origin main: Merge made by the 'ort' strategy.
+[33m09f3d79[m[33m ([m[1;32mfeat/update-technician[m[33m)[m HEAD@{8}: merge feat/update-technician: Fast-forward
+[33m75de5e3[m HEAD@{9}: checkout: moving from feat/update-technician to main
+[33m09f3d79[m[33m ([m[1;32mfeat/update-technician[m[33m)[m HEAD@{10}: commit: feat: teknisyen CRUD, soft delete ve is kurallari entegrasyonu tamamlandi
+[33m7c62a61[m[33m ([m[1;31morigin/feat/validation-and-assignment[m[33m, [m[1;32mfeat/validation-and-assignment[m[33m)[m HEAD@{11}: checkout: moving from feat/validation-and-assignment to feat/update-technician
+[33m7c62a61[m[33m ([m[1;31morigin/feat/validation-and-assignment[m[33m, [m[1;32mfeat/validation-and-assignment[m[33m)[m HEAD@{12}: commit: fix: repository savechanges hatasi giderildi ve is emri atama (assign) endpointi eklendi
+[33m96eaac8[m HEAD@{13}: commit: feat: fluent validation eklendi ve teknisyen dto kurallari yazildi
+[33m75de5e3[m HEAD@{14}: checkout: moving from main to feat/validation-and-assignment
+[33m75de5e3[m HEAD@{15}: commit: feat: TechniciansController ve Program.cs DI kaydi tamamlandi
+[33mfede7b6[m HEAD@{16}: pull: Fast-forward
+[33m2fdafcc[m HEAD@{17}: checkout: moving from feat/technician-service to main
+[33m8a38d51[m[33m ([m[1;31morigin/feat/technician-service[m[33m, [m[1;32mfeat/technician-service[m[33m)[m HEAD@{18}: commit: feat: technician dto, interface ve service katmanlari eklendi
+[33m2fdafcc[m HEAD@{19}: checkout: moving from main to feat/technician-service
+[33m2fdafcc[m HEAD@{20}: pull: Fast-forward
+[33m1dbeb20[m HEAD@{21}: checkout: moving from feat/workorder-controller to main
+[33me76a047[m[33m ([m[1;31morigin/feat/workorder-controller[m[33m, [m[1;32mfeat/workorder-controller[m[33m)[m HEAD@{22}: commit: feat: workorder controller ve swagger entegrasyonu tamamlandi
+[33m1dbeb20[m HEAD@{23}: checkout: moving from main to feat/workorder-controller
+[33m1dbeb20[m HEAD@{24}: pull: Fast-forward
+[33m0ec1966[m HEAD@{25}: checkout: moving from feat/repository-pattern to main
+[33mca882ae[m[33m ([m[1;31morigin/feat/repository-pattern[m[33m, [m[1;32mfeat/repository-pattern[m[33m)[m HEAD@{26}: commit: feat: generic repository ve work order service katmanlari eklendi
+[33m0ec1966[m HEAD@{27}: checkout: moving from main to feat/repository-pattern
+[33m0ec1966[m HEAD@{28}: pull: Fast-forward
+[33m72eddf6[m HEAD@{29}: checkout: moving from feat/infrastructure-dbcontext to main
+[33m660c18a[m[33m ([m[1;31morigin/feat/infrastructure-dbcontext[m[33m, [m[1;32mfeat/infrastructure-dbcontext[m[33m)[m HEAD@{30}: commit: feat: Ef Core kuruldu ve veritabanı migration ile oluşturdu
+[33m72eddf6[m HEAD@{31}: checkout: moving from main to feat/infrastructure-dbcontext
+[33m72eddf6[m HEAD@{32}: pull: Fast-forward
+[33mca1a276[m HEAD@{33}: checkout: moving from feat/domain-actors to main
+[33m7859323[m[33m ([m[1;31morigin/feat/domain-actors[m[33m, [m[1;32mfeat/domain-actors[m[33m)[m HEAD@{34}: commit: feat: Technician ve InventoryItem entityleri eklendi
+[33mca1a276[m HEAD@{35}: Branch: renamed refs/heads/feat/dpmain-actors to refs/heads/feat/domain-actors
+[33mca1a276[m HEAD@{37}: checkout: moving from main to feat/dpmain-actors
+[33mca1a276[m HEAD@{38}: pull: Fast-forward
+[33m4cf9a9c[m[33m ([m[1;32mfeat/domain-remaining-entities[m[33m)[m HEAD@{39}: checkout: moving from feat/core-domain to main
+[33mc8bfc94[m[33m ([m[1;31morigin/feat/core-domain[m[33m, [m[1;32mfeat/core-domain[m[33m)[m HEAD@{40}: commit: feat: BaseEntity, WorkOrder entity ve State enum eklendi
+[33m4cf9a9c[m[33m ([m[1;32mfeat/domain-remaining-entities[m[33m)[m HEAD@{41}: checkout: moving from feat/domain-remaining-entities to feat/core-domain
+[33m4cf9a9c[m[33m ([m[1;32mfeat/domain-remaining-entities[m[33m)[m HEAD@{42}: checkout: moving from main to feat/domain-remaining-entities
+[33m4cf9a9c[m[33m ([m[1;32mfeat/domain-remaining-entities[m[33m)[m HEAD@{43}: commit: feat: projenin ana iskelet cozumu eklendi
+[33mb7c1697[m HEAD@{44}: clone: from https://github.com/mehmetemretek32-crypto/FieldServiceManagement.git

@@ -4,7 +4,8 @@ using FSM.Application.DTOs.Customer;
 using FSM.Application.DTOs.Technicians; // Senin klasör adın 'Technicians' idi
 using FSM.Application.DTOs.WorkOrders;
 using FSM.Domain.Entities;
-
+using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
+using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 namespace FSM.Application.Mappings;
 
 public class MappingProfile : Profile
@@ -15,8 +16,10 @@ public class MappingProfile : Profile
         // 1. WORK ORDER (İŞ EMİRLERİ) HARİTASI
         // ====================================================
         CreateMap<WorkOrder, WorkOrderDto>();
-        CreateMap<CreateWorkOrderDto, WorkOrder>();
-        CreateMap<UpdateWorkOrderDto, WorkOrder>();
+        CreateMap<CreateWorkOrderDto, CreateWorkOrderCommand>();
+        CreateMap<UpdateWorkOrderDto, UpdateWorkOrderCommand>();
+        CreateMap<CreateWorkOrderCommand, WorkOrder>();
+        CreateMap<UpdateWorkOrderCommand, WorkOrder>();
 
         // ====================================================
         // 2. TECHNICIAN (TEKNİSYENLER) HARİTASI
