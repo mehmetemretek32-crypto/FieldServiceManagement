@@ -1,11 +1,13 @@
-﻿using FSM.Application.DTOs;
+﻿using AutoMapper;
+using FSM.Application.DTOs;
 using FSM.Application.DTOs.WorkOrders;
-using FSM.Application.Interfaces;
-using FSM.Application.Services;
+using FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
+using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
+using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
+using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
+using FSM.Application.Features.WorkOrders.Queries.GetWorkOrderById;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace FSM.WebAPI.Controllers
 {
@@ -13,62 +15,55 @@ namespace FSM.WebAPI.Controllers
     [ApiController]
     public class WorkOrdersController : ControllerBase
     {
-        // İsim hem Program.cs ile uyumlu (çoğul) hale getirildi, 
-        // hem de değişken adı senin alıştığın gibi '_service' olarak bırakıldı.
-        private readonly IWorkOrderService _service;
+        private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
 
-        public WorkOrdersController(IWorkOrderService service)
+        public WorkOrdersController(IMediator mediator, IMapper mapper)
         {
-            _service = service;
+            _mediator = mediator;
+            _mapper = mapper;
         }
 
-        // GET: api/WorkOrders
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WorkOrderDto>>> GetAll()
         {
-            var workOrders = await _service.GetAllWorkOrdersAsync();
-            return Ok(workOrders); // HTTP 200 OK (Garson tabağı masaya koydu)
+            var result = await _mediator.Send(new GetAllWorkOrdersQuery());
+            return Ok(result);
         }
 
-        // GET: api/WorkOrders/5
         [HttpGet("{id}")]
         public async Task<ActionResult<WorkOrderDto>> GetById(int id)
         {
-            var workOrder = await _service.GetWorkOrderByIdAsync(id);
-
-            if (workOrder == null)
-                return NotFound(new { message = $"{id} numaralı iş emri sistemde bulunamadı." }); // HTTP 404
-
-            return Ok(workOrder);
+            var result = await _mediator.Send(new GetWorkOrderByIdQuery(id));
+            if (result == null)
+                return NotFound(new { message = $"{id} numaralı iş emri sistemde bulunamadı." });
+            return Ok(result);
         }
 
-        // POST: api/WorkOrders
         [HttpPost]
         public async Task<ActionResult<int>> Create([FromBody] CreateWorkOrderDto dto)
         {
-            var newId = await _service.CreateWorkOrderAsync(dto);
-
-            // BÜYÜ BURADA: 200 OK yerine "201 Created" döner ve faturaya yeni kaydın adresini yazar!
+            var command = _mapper.Map<CreateWorkOrderCommand>(dto);
+            var newId = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetById), new { id = newId }, newId);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateWorkOrder([FromBody] UpdateWorkOrderDto dto)
+        public async Task<IActionResult> Update([FromBody] UpdateWorkOrderCommand command)
         {
-            await _service.UpdateWorkOrderAsync(dto);
-            return Ok(new { message = "İş emri başarıyla güncellendi!" });
+            // Artık 'var result' yok, çünkü Unit hiçbir şey döndürmez.
+            // İşlem başarılıysa buraya kadar gelir, hata varsa zaten Exception fırlatır.
+            await _mediator.Send(command);
+
+            return Ok(new { message = "İş emri başarıyla güncellendi." });
         }
 
-        // --- YENİ EKLENEN ATAMA ENDPOINT'İ ---
         [HttpPost("assign")]
         public async Task<IActionResult> AssignWorkOrder([FromBody] AssignWorkOrderDto dto)
         {
-            // Try-Catch yok! Kod patlarsa kapıdaki Bodyguard (Middleware) yakalayacak.
-            await _service.AssignWorkOrderAsync(dto);
-
+            var command = new AssignWorkOrderCommand { WorkOrderId = dto.WorkOrderId, TechnicianId = dto.TechnicianId };
+            await _mediator.Send(command);
             return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
         }
-
-
     }
 }

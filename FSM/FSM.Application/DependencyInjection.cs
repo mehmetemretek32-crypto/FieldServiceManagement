@@ -8,10 +8,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // FluentValidation'ı sisteme tanıtıyoruz
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        // AutoMapper
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
         return services;
     }

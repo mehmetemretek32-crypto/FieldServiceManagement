@@ -17,7 +17,6 @@ builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =
 
 // --- 2. İŞ MANTIĞI VE DEPO KAYITLARI (DEPENDENCY INJECTION) ---
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IWorkOrderService, WorkOrdersService>();
 builder.Services.AddScoped<ITechnicianService, TechnicianService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 
