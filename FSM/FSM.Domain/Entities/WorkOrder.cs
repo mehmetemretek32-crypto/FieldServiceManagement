@@ -13,4 +13,5 @@ public class WorkOrder : BaseEntity
 
     public int CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
+    public bool IsDeleted { get; set; } = false;
 }

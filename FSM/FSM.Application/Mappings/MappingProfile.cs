@@ -3,9 +3,13 @@ using FSM.Application.DTOs;
 using FSM.Application.DTOs.Customer;
 using FSM.Application.DTOs.Technicians; // Senin klasör adın 'Technicians' idi
 using FSM.Application.DTOs.WorkOrders;
-using FSM.Domain.Entities;
+using FSM.Application.Features.Customers.Commands.CreateCustomer;
+using FSM.Application.Features.Customers.Commands.UpdateCustomer;
+using FSM.Application.Features.Technicians.Commands.CreateTechnician;
+using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
+using FSM.Domain.Entities;
 namespace FSM.Application.Mappings;
 
 public class MappingProfile : Profile
@@ -25,14 +29,19 @@ public class MappingProfile : Profile
         // 2. TECHNICIAN (TEKNİSYENLER) HARİTASI
         // ====================================================
         CreateMap<Technician, TechnicianDto>();
-        CreateMap<CreateTechnicianDto, Technician>();
-        CreateMap<UpdateTechnicianDto, Technician>();
+        CreateMap<CreateTechnicianCommand, Technician>()
+    .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+    .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+    .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber));
+        CreateMap<UpdateTechnicianCommand, Technician>()
+    .ForMember(dest => dest.Id, opt => opt.Ignore()); // ID'yi güncellemiyoruz!
 
-        // ====================================================
+        // =========================================================
         // 3. CUSTOMER (MÜŞTERİLER) HARİTASI
-        // ====================================================
+        // =========================================================
         CreateMap<Customer, CustomerDto>();
-        CreateMap<CreateCustomerDto, Customer>();
-        CreateMap<UpdateCustomerDto, Customer>();
+        CreateMap<CreateCustomerCommand, Customer>();
+        CreateMap<UpdateCustomerCommand, Customer>();
+
     }
 }

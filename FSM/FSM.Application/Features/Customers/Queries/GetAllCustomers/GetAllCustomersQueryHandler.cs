@@ -21,6 +21,8 @@ public class GetAllCustomerwQueryHandler : IRequestHandler<GetAllCustomersQuery,
     public async Task<IEnumerable<CustomerDto>> Handle(GetAllCustomersQuery request, CancellationToken cancellationToken)
     {
         var customers = await _repository.GetAllAsync();
-        return _mapper.Map<IEnumerable<CustomerDto>>(customers);
+        var activeCustomers = customers.Where(c => c.IsDeleted == false).ToList();
+        var customerDtos = _mapper.Map<List<CustomerDto>>(activeCustomers);
+        return customerDtos;
     }
 }
