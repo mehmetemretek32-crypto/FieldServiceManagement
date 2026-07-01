@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using FSM.Application.DTOs;
+using FSM.Application.Features.Customers.Commands.CreateCustomer;
 
 namespace FSM.Application.Validators;
 
-public class CreateCustomerDtoValidator : AbstractValidator<CreateCustomerDto>
+public class CreateCustomerValidator : AbstractValidator<CreateCustomerCommand>
 {
-    public CreateCustomerDtoValidator()
+    public CreateCustomerValidator()
     {
         // Not: Create işleminde Id kontrolü YAPMIYORUZ çünkü Id'yi veritabanı kendisi verecek.
 

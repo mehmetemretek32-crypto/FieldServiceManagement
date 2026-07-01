@@ -22,7 +22,7 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
     {
         var customer = await _repository.GetByIdAsync(request.Id);
 
-        if (customer == null)
+        if (customer == null || customer.IsDeleted)
             throw new Exception($"ID'si {request.Id} olan müşteri bulunamadı!");
 
         // Verileri elle atayarak kuryeyi aradan çıkarıyoruz:

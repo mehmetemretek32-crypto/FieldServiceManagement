@@ -1,12 +1,13 @@
 ﻿using FluentValidation;
 using FSM.Application.DTOs;
-using FSM.Application.DTOs.Technicians; 
+using FSM.Application.DTOs.Technicians;
+using FSM.Application.Features.Technicians.Commands.CreateTechnician;
 
 namespace FSM.Application.Validators
 {
-    public class CreateTechnicianDtoValidator : AbstractValidator<CreateTechnicianDto>
+    public class CreateTechnicianCommandValidator : AbstractValidator<CreateTechnicianCommand>
     {
-        public CreateTechnicianDtoValidator()
+        public CreateTechnicianCommandValidator()
         {
             // İsim alanı kuralları
             RuleFor(x => x.FullName)
@@ -21,7 +22,9 @@ namespace FSM.Application.Validators
 
             // Telefon numarası kuralları
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("Telefon numarası zorunludur.");
+                .NotEmpty().WithMessage("Telefon numarası zorunludur.")
+                .Matches(@"^\+?\d{10,15}$").WithMessage("Geçerli bir telefon numarası giriniz. (10-15 haneli, isteğe bağlı '+' ile başlayabilir)");
+
         }
     }
 }

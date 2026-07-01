@@ -1,12 +1,13 @@
 ﻿using FluentValidation;
 using FSM.Application.DTOs.WorkOrders;
+using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 
 
 namespace FSM.Application.Validators;
 
-public class UpdateWorkOrderDtoValidator : AbstractValidator<UpdateWorkOrderDto>
+public class UpdateWorkOrderCommandValidator : AbstractValidator<UpdateWorkOrderCommand>
 {
-    public UpdateWorkOrderDtoValidator()
+    public UpdateWorkOrderCommandValidator()
     {
         RuleFor(x => x.Id)
             .GreaterThan(0).WithMessage("Güncellenecek iş emri için geçerli bir ID girilmelidir.");

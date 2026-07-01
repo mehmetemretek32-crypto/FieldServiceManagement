@@ -2,10 +2,10 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using FSM.Application;
 using FSM.Application.Interfaces;
-using FSM.Application.Services;
 using FSM.Application.Validators;
 using FSM.Domain.Interfaces;
 using FSM.Infrastructure.Repositories;
+using FSM.WebAPI.Hubs;
 using FSM.WebAPI.Middlewares;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,9 +17,8 @@ builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =
 
 // --- 2. İŞ MANTIĞI VE DEPO KAYITLARI (DEPENDENCY INJECTION) ---
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<ITechnicianService, TechnicianService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
 // --- 3. CONTROLLER (GARSON) VE SWAGGER (VİTRİN) KAYITLARI ---
 builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
@@ -27,7 +26,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); // O meşhur yeşil arayüzün mimarı!
 
 // Kapıdaki Bodyguard'ı (Validator) sisteme tanıtıyoruz
-builder.Services.AddValidatorsFromAssemblyContaining<CreateTechnicianDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTechnicianCommandValidator>();
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
@@ -42,5 +41,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
+app.MapHub<NotificationHub>("/notificationHub");
 app.Run();
