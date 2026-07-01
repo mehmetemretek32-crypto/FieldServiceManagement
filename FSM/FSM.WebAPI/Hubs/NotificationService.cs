@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using FSM.Application.Interfaces;
-using FSM.WebAPI.Hubs;
+﻿using FSM.Application.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+
+namespace FSM.WebAPI.Hubs;
 
 public class NotificationService : INotificationService
 {
@@ -14,5 +15,12 @@ public class NotificationService : INotificationService
     public async Task SendWorkOrderNotification(string message)
     {
         await _hubContext.Clients.All.SendAsync("ReceiveWorkOrder", message);
+    }
+
+    // YENİ METOT: Sadece ilgili teknisyenin grubuna mesaj gönderir
+    public async Task SendNotificationToTechnician(int technicianId, string message)
+    {
+        string groupName = $"Technician_{technicianId}";
+        await _hubContext.Clients.Group(groupName).SendAsync("ReceiveWorkOrder", message);
     }
 }

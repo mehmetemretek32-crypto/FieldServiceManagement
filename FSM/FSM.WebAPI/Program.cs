@@ -21,6 +21,16 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSignalR();
 // --- 3. CONTROLLER (GARSON) VE SWAGGER (VİTRİN) KAYITLARI ---
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.SetIsOriginAllowed(origin => true) // Her yerden erişime izin ver (Test için)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // SignalR için gereklidir
+    });
+});
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); // O meşhur yeşil arayüzün mimarı!
@@ -42,4 +52,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
+app.UseCors("AllowAll");
 app.Run();
