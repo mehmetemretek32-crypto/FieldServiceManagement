@@ -17,15 +17,23 @@ public class DeleteCustomerCommandHandler : IRequestHandler<DeleteCustomerComman
     {
         var customer = await _repository.GetByIdAsync(request.Id);
 
+        // 1. Müşteri hiç yoksa
         if (customer == null)
-            throw new Exception($"ID'si {request.Id} olan müşteri bulunamadı!");
+        {
+            throw new Exception($"Hata: ID'si {request.Id} olan müşteri bulunamadı.");
+        }
 
-        // 1. Veriyi silmek yerine durumunu "Silindi" veya "Pasif" olarak işaretliyoruz.
-        // DİKKAT: Kendi Customer tablonuzdaki özellik adı neyse (IsActive, Status vb.) onu kullanmalısın!
+        // 2. KRİTİK KONTROL: Müşteri zaten silinmişse
+        if (customer.IsDeleted)
+        {
+            throw new Exception($"Hata: ID'si {request.Id} olan müşteri zaten daha önceden silinmiş!");
+        }
+
+        // 3. Silinmemişse pasife çek (Soft Delete)
         customer.IsDeleted = true;
 
-        // 2. Repository'nin Delete metodunu DEĞİL, Update metodunu çağırıyoruz.
         await _repository.UpdateAsync(customer);
+        await _repository.SaveChangesAsync();
 
         return Unit.Value;
     }
