@@ -1,7 +1,10 @@
-﻿using FSM.Application.DTOs;
-using FSM.Application.DTOs.Customer;
-using FSM.Application.Services; // Veya senin ICustomerService namespace'in hangisiyse
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using FSM.Application.Features.Customers.Commands.CreateCustomer;
+using FSM.Application.Features.Customers.Commands.UpdateCustomer;
+using FSM.Application.Features.Customers.Commands.DeleteCustomer;
+using FSM.Application.Features.Customers.Queries.GetAllCustomers;
+using FSM.Application.Features.Customers.Queries.GetCustomerById;
 
 namespace FSM.WebAPI.Controllers;
 
@@ -9,45 +12,50 @@ namespace FSM.WebAPI.Controllers;
 [ApiController]
 public class CustomersController : ControllerBase
 {
-    private readonly ICustomerService _customerService;
+    private readonly IMediator _mediator;
 
-    public CustomersController(ICustomerService customerService)
+    public CustomersController(IMediator mediator)
     {
-        _customerService = customerService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var customers = await _customerService.GetAllCustomersAsync();
+        // GetAllCustomersQuery sınıfının adını, kendi oluşturduğun Query sınıfının adıyla aynı olduğundan emin ol
+        var customers = await _mediator.Send(new GetAllCustomersQuery());
         return Ok(customers);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var customer = await _customerService.GetCustomerByIdAsync(id);
+        // GetCustomerByIdQuery sınıfını gönderiyoruz
+        var customer = await _mediator.Send(new GetCustomerByIdQuery { Id = id });
         return Ok(customer);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateCustomerDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateCustomerCommand command)
     {
-        var newCustomerId = await _customerService.CreateCustomerAsync(dto);
+        // DTO yerine direkt Command alıyoruz
+        var newCustomerId = await _mediator.Send(command);
         return Ok(new { message = "Müşteri başarıyla oluşturuldu.", id = newCustomerId });
     }
 
-    [HttpPut] // WorkOrder ile simetrik hale getirdik
-    public async Task<IActionResult> Update([FromBody] UpdateCustomerDto dto)
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] UpdateCustomerCommand command)
     {
-        await _customerService.UpdateCustomerAsync(dto);
+        // Dün WorkOrders'da yaptığımız gibi, Unit dönen işlemlerde değişkene atama (var result =) yapmıyoruz!
+        await _mediator.Send(command);
         return Ok(new { message = "Müşteri başarıyla güncellendi." });
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _customerService.DeleteCustomerAsync(id);
+        // Delete için de direkt command gönderiyoruz
+        await _mediator.Send(new DeleteCustomerCommand { Id = id });
         return Ok(new { message = "Müşteri başarıyla sistemden pasife çekildi." });
     }
 }

@@ -1,6 +1,9 @@
-﻿using FSM.Application.DTOs.Technicians;
-using FSM.Application.Interfaces;
-using FSM.Application.Services;
+﻿using FSM.Application.Features.Technican.Queries.GetAllTechnician;
+using FSM.Application.Features.Technicians.Commands.CreateTechnician;
+using FSM.Application.Features.Technicians.Commands.DeleteTechnician;
+using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
+using FSM.Application.Features.Technicians.Queries.GetTechnicianById;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSM.WebAPI.Controllers;
@@ -9,79 +12,50 @@ namespace FSM.WebAPI.Controllers;
 [ApiController]
 public class TechniciansController : ControllerBase
 {
-    private readonly ITechnicianService _service;
+    private readonly IMediator _mediator;
 
-    public TechniciansController(ITechnicianService service)
+    public TechniciansController(IMediator mediator)
     {
-        _service = service;
+        _mediator = mediator;
     }
 
     // GET: api/Technicians
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TechnicianDto>>> GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var technicians = await _service.GetAllTechniciansAsync();
-        return Ok(technicians);
+        var result = await _mediator.Send(new GetAllTechniciansQuery());
+        return Ok(result);
     }
 
     // GET: api/Technicians/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<TechnicianDto>> GetById(int id)
+    public async Task<IActionResult> GetById(int id)
     {
-        var technician = await _service.GetTechnicianByIdAsync(id);
-
-        if (technician == null)
-            return NotFound(new { message = $"{id} numaralı teknisyen bulunamadı." });
-
-        return Ok(technician);
+        var result = await _mediator.Send(new GetTechnicianByIdQuery { Id = id });
+        return Ok(result);
     }
 
     // POST: api/Technicians
     [HttpPost]
-    public async Task<ActionResult<int>> Create([FromBody] CreateTechnicianDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateTechnicianCommand command)
     {
-        var newId = await _service.CreateTechnicianAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = newId }, newId);
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
-    // TEKNİSYEN GÜNCELLEME (UPDATE)
+    // PUT: api/Technicians
     [HttpPut]
-    public async Task<IActionResult> UpdateTechnician([FromBody] UpdateTechnicianDto dto)
+    public async Task<IActionResult> Update([FromBody] UpdateTechnicianCommand command)
     {
-        // 1. Gelen DTO'yu servise (mutfağa) gönder
-        var isUpdated = await _service.UpdateTechnicianAsync(dto);
-
-        // 2. Eğer servis 'false' dönerse, veritabanında böyle bir ID yok demektir
-        if (!isUpdated)
-        {
-            return NotFound(new { message = $"ID'si {dto.Id} olan teknisyen bulunamadı." });
-        }
-
-        // 3. İşlem başarılıysa müşteriye bilgi ver
+        await _mediator.Send(command);
         return Ok(new { message = "Teknisyen bilgileri başarıyla güncellendi." });
-
-        
     }
-    // TEKNİSYEN YUMUŞAK SİLME (SOFT DELETE)
-    // TEKNİSYEN YUMUŞAK SİLME (SOFT DELETE)
+
+    // DELETE: api/Technicians/5 (Soft Delete)
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTechnician(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var isDeleted = await _service.DeleteTechnicianAsync(id);
-
-            if (!isDeleted)
-            {
-                return NotFound(new { message = $"ID'si {id} olan aktif bir teknisyen bulunamadı." });
-            }
-
-            return Ok(new { message = "Teknisyen başarıyla pasife çekildi (Soft Delete)." });
-        }
-        catch (InvalidOperationException ex)
-        {
-          
-            return BadRequest(new { message = ex.Message });
-        }
+        await _mediator.Send(new DeleteTechnicianCommand { Id = id });
+        return Ok(new { message = "Teknisyen başarıyla pasife çekildi (Soft Delete)." });
     }
 }

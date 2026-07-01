@@ -3,6 +3,7 @@ using FSM.Application.DTOs;
 using FSM.Application.DTOs.WorkOrders;
 using FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
+using FSM.Application.Features.WorkOrders.Commands.DeleteWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
 using FSM.Application.Features.WorkOrders.Queries.GetWorkOrderById;
@@ -64,6 +65,12 @@ namespace FSM.WebAPI.Controllers
             var command = new AssignWorkOrderCommand { WorkOrderId = dto.WorkOrderId, TechnicianId = dto.TechnicianId };
             await _mediator.Send(command);
             return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _mediator.Send(new DeleteWorkOrderCommand { Id = id });
+            return Ok(new { message = "İş emri başarıyla iptal edildi/pasife çekildi." });
         }
     }
 }
