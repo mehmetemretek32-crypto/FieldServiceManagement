@@ -2,6 +2,7 @@
 using FSM.Domain.Interfaces;
 using FSM.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace FSM.Infrastructure.Repositories;
 
@@ -54,5 +55,10 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
+    }
+    public async Task<T?> GetAsync(Expression<Func<T, bool>> predicate)
+    {
+        // Veritabanına "Sadece benim gönderdiğim şarta uyan İLK kaydı getir" diyoruz.
+        return await _dbSet.FirstOrDefaultAsync(predicate);
     }
 }
