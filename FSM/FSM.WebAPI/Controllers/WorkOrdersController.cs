@@ -8,12 +8,14 @@ using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
 using FSM.Application.Features.WorkOrders.Queries.GetWorkOrderById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSM.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class WorkOrdersController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -67,6 +69,7 @@ namespace FSM.WebAPI.Controllers
             return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
         }
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")] 
         public async Task<IActionResult> Delete(int id)
         {
             await _mediator.Send(new DeleteWorkOrderCommand { Id = id });
