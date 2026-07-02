@@ -5,11 +5,21 @@ using FSM.Application.Interfaces;
 using FSM.Application.Validators;
 using FSM.Domain.Interfaces;
 using FSM.Infrastructure.Repositories;
+using FSM.Infrastructure.Services;
 using FSM.WebAPI.Hubs;
 using FSM.WebAPI.Middlewares;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models; // Swagger modelleri için zorunlu kütüphane
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- JWT Ayarları ---
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"];
 
 // --- 1. VERİTABANI VE ALTYAPI (INFRASTRUCTURE) KAYITLARI ---
 builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =>
@@ -19,8 +29,12 @@ builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSignalR();
-// --- 3. CONTROLLER (GARSON) VE SWAGGER (VİTRİN) KAYITLARI ---
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+// --- 3. CONTROLLER (GARSON), CORS VE SWAGGER (VİTRİN) KAYITLARI ---
 builder.Services.AddControllers();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -31,17 +45,78 @@ builder.Services.AddCors(options =>
               .AllowCredentials(); // SignalR için gereklidir
     });
 });
+
+// --- JWT Authentication Configuration ---
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey ?? string.Empty))
+    };
+});
+// JWT'nin rol bilgisini doğru yerden okuması için ekliyoruz
+builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters.RoleClaimType = System.Security.Claims.ClaimTypes.Role;
+});
+
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // O meşhur yeşil arayüzün mimarı!
 
 // Kapıdaki Bodyguard'ı (Validator) sisteme tanıtıyoruz
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTechnicianCommandValidator>();
 builder.Services.AddApplicationServices();
 
+// --- SWAGGER JWT ENTEGRASYONU ---
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "FSM API", Version = "v1" });
+
+    // Swagger'a Bearer Token kullanılacağını bildiriyoruz
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Token'ınızı buraya yapıştırın. Sadece ürettiğiniz o uzun şifreli metni girmeniz yeterlidir."
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 var app = builder.Build();
-app.UseMiddleware<ExceptionMiddleware>();
+
 // --- 4. HTTP İSTEK HATTI (PIPELINE) ---
+
+// ExceptionMiddleware en üstte olmalı ki altındaki tüm süreçlerdeki hataları yakalayabilsin
+app.UseMiddleware<ExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();     // Arka planda haritayı çıkarır
@@ -49,8 +124,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
+
+// DİKKAT: CORS her zaman Authentication ve Authorization'dan ÖNCE gelmelidir!
+app.UseCors("AllowAll");
+
+app.UseAuthentication(); // 1. Kimlik Doğrulama (Sisteme girebilir mi?)
+app.UseAuthorization();  // 2. Yetki Doğrulama (Bu işlemi yapabilir mi?)
+
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
-app.UseCors("AllowAll");
+
 app.Run();

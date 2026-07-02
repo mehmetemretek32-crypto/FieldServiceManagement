@@ -14,4 +14,5 @@ public class AppDbContext : DbContext
     public DbSet<Technician> Technicians { get; set; }
     public DbSet<InventoryItem> InventoryItems { get; set; }
     public DbSet<Customer> Customers { get; set; }
+    public DbSet<AppUser> AppUsers { get; set; }
 }
