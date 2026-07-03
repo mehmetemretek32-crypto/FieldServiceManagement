@@ -7,10 +7,12 @@ using FSM.Application.Features.WorkOrders.Commands.DeleteWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrderStatus;
 using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
+using FSM.Application.Features.WorkOrders.Queries.GetMyActiveWorkOrders;
 using FSM.Application.Features.WorkOrders.Queries.GetWorkOrderById;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FSM.WebAPI.Controllers
 {
@@ -84,6 +86,24 @@ namespace FSM.WebAPI.Controllers
         {
             await _mediator.Send(command);
             return Ok(new { Message = "İş emri durumu başarıyla güncellendi!" });
+        }
+
+        [Authorize(Roles = "Technician,Admin")]
+        [HttpGet("my-tasks")]
+        public async Task<ActionResult<IEnumerable<WorkOrderDto>>> GetMyTasks()
+        {
+            // Token içindeki NameIdentifier (Kullanıcı ID) bilgisini okuyoruz
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int technicianId))
+            {
+                return Unauthorized(new { Message = "Geçersiz veya okunamayan kullanıcı kimliği!" });
+            }
+
+            var query = new GetMyActiveWorkOrdersQuery { TechnicianId = technicianId };
+            var result = await _mediator.Send(query);
+
+            return Ok(result);
         }
     }
 }
