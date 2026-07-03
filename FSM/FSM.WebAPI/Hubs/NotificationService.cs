@@ -12,15 +12,17 @@ public class NotificationService : INotificationService
         _hubContext = hubContext;
     }
 
+    // Genel bildirim gönderme (Bütün sisteme)
     public async Task SendWorkOrderNotification(string message)
     {
-        await _hubContext.Clients.All.SendAsync("ReceiveWorkOrder", message);
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", message);
     }
 
-    // YENİ METOT: Sadece ilgili teknisyenin grubuna mesaj gönderir
+    // İşte senin gruplama mantığına özel harika metot! 
+    // Sadece işin atandığı teknisyene bildirim gider:
     public async Task SendNotificationToTechnician(int technicianId, string message)
     {
         string groupName = $"Technician_{technicianId}";
-        await _hubContext.Clients.Group(groupName).SendAsync("ReceiveWorkOrder", message);
+        await _hubContext.Clients.Group(groupName).SendAsync("ReceiveNotification", message);
     }
 }
