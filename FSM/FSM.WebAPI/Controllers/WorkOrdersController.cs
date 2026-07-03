@@ -5,6 +5,7 @@ using FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.DeleteWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
+using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrderStatus;
 using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
 using FSM.Application.Features.WorkOrders.Queries.GetWorkOrderById;
 using MediatR;
@@ -68,12 +69,21 @@ namespace FSM.WebAPI.Controllers
             await _mediator.Send(command);
             return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
         }
+
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")] 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _mediator.Send(new DeleteWorkOrderCommand { Id = id });
             return Ok(new { message = "İş emri başarıyla iptal edildi/pasife çekildi." });
+        }
+
+        [Authorize(Roles = "Technician,Admin")] // Hem teknisyen hem admin değiştirebilsin
+        [HttpPatch("status")]
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateWorkOrderStatusCommand command)
+        {
+            await _mediator.Send(command);
+            return Ok(new { Message = "İş emri durumu başarıyla güncellendi!" });
         }
     }
 }
