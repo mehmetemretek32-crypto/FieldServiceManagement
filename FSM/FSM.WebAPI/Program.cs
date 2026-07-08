@@ -109,6 +109,15 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+//Angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+        policy => policy.WithOrigins("http://localhost:4200") // Angular adresimiz
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()); // SignalR için bu şart!
+});
 
 var app = builder.Build();
 
@@ -133,5 +142,5 @@ app.UseAuthorization();  // 2. Yetki Doğrulama (Bu işlemi yapabilir mi?)
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
-
+app.UseCors("AllowAngular");
 app.Run();

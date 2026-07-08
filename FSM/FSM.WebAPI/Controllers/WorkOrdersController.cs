@@ -18,7 +18,7 @@ namespace FSM.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class WorkOrdersController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -54,11 +54,12 @@ namespace FSM.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = newId }, newId);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdateWorkOrderCommand command)
+        [HttpPut("{id}")] // <--- İÇİNE "{id}" EKLEDİK, ARTIK TARAYICIDAN GELEN ID'Yİ TANIZACAK!
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateWorkOrderCommand command)
         {
-            // Artık 'var result' yok, çünkü Unit hiçbir şey döndürmez.
-            // İşlem başarılıysa buraya kadar gelir, hata varsa zaten Exception fırlatır.
+            // Eğer command içindeki Id boş gelme ihtimaline karşı garantiye alalım:
+            command.Id = id;
+
             await _mediator.Send(command);
 
             return Ok(new { message = "İş emri başarıyla güncellendi." });
@@ -73,7 +74,7 @@ namespace FSM.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+       // [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _mediator.Send(new DeleteWorkOrderCommand { Id = id });
