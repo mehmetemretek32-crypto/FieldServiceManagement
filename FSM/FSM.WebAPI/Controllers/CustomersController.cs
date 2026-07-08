@@ -19,10 +19,11 @@ public class CustomersController : ControllerBase
         _mediator = mediator;
     }
 
+    // --- GENEL MÜŞTERİ OPERASYONLARI ---
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        // GetAllCustomersQuery sınıfının adını, kendi oluşturduğun Query sınıfının adıyla aynı olduğundan emin ol
         var customers = await _mediator.Send(new GetAllCustomersQuery());
         return Ok(customers);
     }
@@ -30,7 +31,6 @@ public class CustomersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        // GetCustomerByIdQuery sınıfını gönderiyoruz
         var customer = await _mediator.Send(new GetCustomerByIdQuery { Id = id });
         return Ok(customer);
     }
@@ -38,7 +38,6 @@ public class CustomersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateCustomerCommand command)
     {
-        // DTO yerine direkt Command alıyoruz
         var newCustomerId = await _mediator.Send(command);
         return Ok(new { message = "Müşteri başarıyla oluşturuldu.", id = newCustomerId });
     }
@@ -46,7 +45,6 @@ public class CustomersController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Update([FromBody] UpdateCustomerCommand command)
     {
-        // Dün WorkOrders'da yaptığımız gibi, Unit dönen işlemlerde değişkene atama (var result =) yapmıyoruz!
         await _mediator.Send(command);
         return Ok(new { message = "Müşteri başarıyla güncellendi." });
     }
@@ -54,8 +52,18 @@ public class CustomersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        // Delete için de direkt command gönderiyoruz
         await _mediator.Send(new DeleteCustomerCommand { Id = id });
         return Ok(new { message = "Müşteri başarıyla sistemden pasife çekildi." });
+    }
+
+    // --- 🔥 PRO FSM EKLEMELERİ (TARİHÇE VE RAPORLAMA) ---
+
+    // MÜŞTERİ KRONOLOJİK İŞ EMRİ GEÇMİŞİ (Timeline Modalı İçin)
+    // GET: api/Customers/5/workorders
+    [HttpGet("{id}/workorders")]
+    public async Task<IActionResult> GetWorkOrderHistoryByCustomer(int id)
+    {
+        // İleride buraya: var history = await _mediator.Send(new GetWorkOrdersByCustomerIdQuery { CustomerId = id });
+        return Ok(new { Message = $"{id} ID'li müşterinin geçmiş tüm arıza, bakım ve saha iş emirleri listeleniyor..." });
     }
 }

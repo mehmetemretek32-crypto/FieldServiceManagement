@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using FSM.Application.DTOs;
 using FSM.Application.DTOs.Technicians;
-using FSM.Application.Features.Technicians.Commands.CreateTechnician;
+using FSM.Application.Features.Technican.Commands.CreateTechnician;
 
 namespace FSM.Application.Validators
 {
