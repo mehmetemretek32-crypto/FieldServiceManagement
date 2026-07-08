@@ -21,6 +21,16 @@ var builder = WebApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
 
+// Gizli anahtar koda/appsettings'e gömülmemelidir. Ortam değişkeni
+// (JwtSettings__SecretKey) veya user-secrets üzerinden sağlanmalıdır.
+if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "JWT signing key is missing or too short. Provide a strong key (>= 32 chars) " +
+        "via the 'JwtSettings:SecretKey' configuration, e.g. the environment variable " +
+        "'JwtSettings__SecretKey' or user-secrets. Do not hardcode it in appsettings.json.");
+}
+
 // --- 1. VERİTABANI VE ALTYAPI (INFRASTRUCTURE) KAYITLARI ---
 builder.Services.AddDbContext<FSM.Infrastructure.Context.AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -35,11 +45,17 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 // --- 3. CONTROLLER (GARSON), CORS VE SWAGGER (VİTRİN) KAYITLARI ---
 builder.Services.AddControllers();
 
+// Kimlik bilgisi (AllowCredentials) ile joker origin bir arada kullanılamaz.
+// İzin verilen origin'ler yapılandırmadan (Cors:AllowedOrigins) okunur.
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? Array.Empty<string>();
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowConfiguredOrigins", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true) // Her yerden erişime izin ver (Test için)
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); // SignalR için gereklidir
@@ -126,7 +142,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // DİKKAT: CORS her zaman Authentication ve Authorization'dan ÖNCE gelmelidir!
-app.UseCors("AllowAll");
+app.UseCors("AllowConfiguredOrigins");
 
 app.UseAuthentication(); // 1. Kimlik Doğrulama (Sisteme girebilir mi?)
 app.UseAuthorization();  // 2. Yetki Doğrulama (Bu işlemi yapabilir mi?)

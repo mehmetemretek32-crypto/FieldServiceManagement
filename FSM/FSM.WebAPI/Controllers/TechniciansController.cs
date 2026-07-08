@@ -12,6 +12,7 @@ namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class TechniciansController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -38,6 +39,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateTechnicianCommand command)
     {
         var result = await _mediator.Send(command);
@@ -45,6 +47,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update([FromBody] UpdateTechnicianCommand command)
     {
         await _mediator.Send(command);
@@ -52,6 +55,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         await _mediator.Send(new DeleteTechnicianCommand { Id = id });
