@@ -5,5 +5,6 @@ public record TechnicianDto(
     string FullName,
     string Email,
     string PhoneNumber,
-    bool IsAvailable
+    bool IsAvailable,
+    int ActiveWorkOrdersCount
 );

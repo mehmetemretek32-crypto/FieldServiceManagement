@@ -1,6 +1,5 @@
 ﻿using FSM.Application.Features.Technican.Queries.GetAllTechnician;
-using FSM.Application.Features.Technican.Queries.GetAllTechnician;
-using FSM.Application.Features.Technicians.Commands.CreateTechnician;
+using FSM.Application.Features.Technican.Commands.CreateTechnician;
 using FSM.Application.Features.Technicians.Commands.DeleteTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
 using FSM.Application.Features.Technicians.Queries.GetTechnicianById;
@@ -58,19 +57,33 @@ public class TechniciansController : ControllerBase
         return Ok(new { message = "Teknisyen başarıyla pasife çekildi (Soft Delete)." });
     }
 
-    // --- YETKİLENDİRİLMİŞ ÖZEL ALANLAR ---
+    // --- 🔥 PRO FSM EKLEMELERİ (OPERASYON & YETKİLENDİRME) ---
 
-    [Authorize(Roles = "Technician")]
-    [HttpGet("is-emirleri")]
-    public IActionResult GetWorkOrders()
+    // 1. TEKNİSYEN HIZLI DURUM DEĞİŞTİRME (Müsait <-> Meşgul)
+    // PATCH: api/Technicians/5/availability?isAvailable=true
+    [HttpPatch("{id}/availability")]
+    public async Task<IActionResult> UpdateAvailability(int id, [FromQuery] bool isAvailable)
     {
-        return Ok(new { Message = "Hoş geldin teknisyen! İşte senin sorumluluğundaki iş emirleri." });
+        // Not: Bunun için küçük bir UpdateTechnicianAvailabilityCommand yazacağız veya UpdateCommand kullanacağız
+        return Ok(new { message = $"Teknisyen statüsü '(Müsait: {isAvailable})' olarak güncellendi." });
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpGet("tum-teknisyenler")]
-    public IActionResult GetAllTechniciansAdmin() // İsim çakışmaması için admin versiyonunu belirttik
+    // 2. TEKNİSYENE ATANMIŞ İŞ EMİRLERİNİ GETİR (Teknisyen Kendi İşlerini Görür)
+    // GET: api/Technicians/5/workorders
+    [Authorize(Roles = "Technician,Admin")]
+    [HttpGet("{id}/workorders")]
+    public async Task<IActionResult> GetWorkOrdersByTechnician(int id)
     {
-        return Ok(new { Message = "Admin yetkisiyle tüm teknisyenleri görüntülüyorsun." });
+        // İleride buraya: var result = await _mediator.Send(new GetWorkOrdersByTechnicianIdQuery { TechnicianId = id });
+        return Ok(new { Message = $"{id} ID'li teknisyene ait aktif saha iş emirleri listeleniyor..." });
+    }
+
+    // 3. ADMİN ÖZEL: TÜM TEKNİSYENLER (Silinmişler / Pasifler Dahil Performans Raporu)
+    [Authorize(Roles = "Admin")]
+    [HttpGet("admin/all-with-performance")]
+    public IActionResult GetAllTechniciansAdmin()
+    {
+        // İleride buraya: Adminlere özel silinmiş teknisyenleri veya tamamladığı toplam iş sayısını çeken sorgu gelecek
+        return Ok(new { Message = "Admin yetkisiyle tüm teknisyen performans ve pasiflik kayıtları görüntüleniyor." });
     }
 }
