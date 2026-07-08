@@ -1,10 +1,10 @@
 ﻿using MediatR;
 
-namespace FSM.Application.Features.Technicians.Commands.CreateTechnician;
-
-public class CreateTechnicianCommand : IRequest<int>
-{
-    public string FullName { get; set; }
-    public string Email { get; set; }
-    public string PhoneNumber { get; set; }
-}
+namespace FSM.Application.Features.Technican.Commands.CreateTechnician;
+// Teknisyen eklendikten sonra geriye yeni oluşan ID'yi (int) döndüreceğiz
+public record CreateTechnicianCommand(
+    string FullName,
+    string Email,
+    string PhoneNumber,
+    bool IsAvailable = true
+) : IRequest<int>;

@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
-using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
-
 
 namespace FSM.Application.Features.Customers.Commands.CreateCustomer;
 
@@ -21,6 +19,9 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
     public async Task<int> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
         var entity = _mapper.Map<Customer>(request);
+
+        // 🔥 GÜVENLİK KİLİDİ: Yeni eklenen bir müşteri asla silinmiş olarak başlayamaz!
+        entity.IsDeleted = false;
 
         await _repository.AddAsync(entity);
         await _repository.SaveChangesAsync();
