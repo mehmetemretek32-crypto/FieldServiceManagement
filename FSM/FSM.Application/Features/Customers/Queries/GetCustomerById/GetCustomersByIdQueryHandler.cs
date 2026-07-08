@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
+using MediatR;
+using FSM.Application.Common;
 using FSM.Application.DTOs;
 using FSM.Domain.Entities;
-using AutoMapper;
-using MediatR;
-using FSM.Domain.Entities;
 using FSM.Domain.Interfaces; // Kendi Repository yoluna göre düzenle
-using FSM.Application.DTOs.Customer;
 
 namespace FSM.Application.Features.Customers.Queries.GetCustomerById;
 
@@ -22,13 +20,7 @@ public class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByIdQuery,
 
     public async Task<CustomerDto> Handle(GetCustomerByIdQuery request, CancellationToken cancellationToken)
     {
-        var customer = await _repository.GetByIdAsync(request.Id);
-
-        // Hem veritabanında hiç yoksa (null) hem de silinmişse (IsDeleted == true) hata fırlatıyoruz
-        if (customer == null || customer.IsDeleted)
-        {
-            throw new Exception($"ID'si {request.Id} olan aktif bir müşteri bulunamadı!");
-        }
+        var customer = await _repository.GetActiveByIdOrThrowAsync(request.Id, "müşteri");
 
         var customerDto = _mapper.Map<CustomerDto>(customer);
         return customerDto;

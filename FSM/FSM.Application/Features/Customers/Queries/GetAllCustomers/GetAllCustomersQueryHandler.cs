@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs;
 using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
@@ -21,7 +22,7 @@ public class GetAllCustomerwQueryHandler : IRequestHandler<GetAllCustomersQuery,
     public async Task<IEnumerable<CustomerDto>> Handle(GetAllCustomersQuery request, CancellationToken cancellationToken)
     {
         var customers = await _repository.GetAllAsync();
-        var activeCustomers = customers.Where(c => c.IsDeleted == false).ToList();
+        var activeCustomers = customers.OnlyActive().ToList();
         var customerDtos = _mapper.Map<List<CustomerDto>>(activeCustomers);
         return customerDtos;
     }

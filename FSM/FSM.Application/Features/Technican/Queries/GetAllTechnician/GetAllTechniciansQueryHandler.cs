@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs.Technicians;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
@@ -22,7 +23,7 @@ public class GetAllTechniciansQueryHandler : IRequestHandler<GetAllTechniciansQu
         var technicians = await _repository.GetAllAsync();
 
         // DİKKAT: Burada sadece silinmemiş (IsDeleted == false) olanları filtreliyoruz!
-        var activeTechnicians = technicians.Where(t => t.IsDeleted == false).ToList();
+        var activeTechnicians = technicians.OnlyActive().ToList();
 
         var dtoList = _mapper.Map<List<TechnicianDto>>(activeTechnicians);
         return dtoList;

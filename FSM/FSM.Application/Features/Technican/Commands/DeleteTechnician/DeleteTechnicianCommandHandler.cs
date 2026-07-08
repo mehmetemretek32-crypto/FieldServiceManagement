@@ -1,4 +1,5 @@
-﻿using MediatR;
+using MediatR;
+using FSM.Application.Common;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 
@@ -15,17 +16,7 @@ public class DeleteTechnicianCommandHandler : IRequestHandler<DeleteTechnicianCo
 
     public async Task<Unit> Handle(DeleteTechnicianCommand request, CancellationToken cancellationToken)
     {
-        var technician = await _repository.GetByIdAsync(request.Id);
-
-        if (technician == null || technician.IsDeleted)
-            throw new Exception($"ID'si {request.Id} olan aktif teknisyen bulunamadı!");
-
-        // Soft Delete işlemi
-        technician.IsDeleted = true;
-
-        await _repository.UpdateAsync(technician);
-        await _repository.SaveChangesAsync();
-
+        await _repository.SoftDeleteAsync(request.Id, "teknisyen");
         return Unit.Value;
     }
 }

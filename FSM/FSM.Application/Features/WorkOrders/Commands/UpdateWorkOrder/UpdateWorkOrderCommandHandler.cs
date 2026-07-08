@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using FSM.Application.Common;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 
@@ -19,10 +20,7 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
     // Task yerine Task<Unit> olması şart!
     public async Task<Unit> Handle(UpdateWorkOrderCommand request, CancellationToken cancellationToken)
     {
-        var workOrder = await _workOrderRepository.GetByIdAsync(request.Id);
-
-        if (workOrder == null)
-            throw new Exception($"ID'si {request.Id} olan iş emri bulunamadı!");
+        var workOrder = await _workOrderRepository.GetByIdOrThrowAsync(request.Id, "iş emri");
 
         // Mapper, request'teki alanları var olan workOrder içine yazar
         _mapper.Map(request, workOrder);
