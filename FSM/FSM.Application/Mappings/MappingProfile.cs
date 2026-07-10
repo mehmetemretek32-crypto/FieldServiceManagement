@@ -5,6 +5,7 @@ using FSM.Application.DTOs.Technicians; // Senin klasör adın 'Technicians' idi
 using FSM.Application.DTOs.WorkOrders;
 using FSM.Application.Features.Customers.Commands.CreateCustomer;
 using FSM.Application.Features.Customers.Commands.UpdateCustomer;
+using FSM.Application.Features.Inventories.Commands.CreateInventoryItem;
 using FSM.Application.Features.Technican.Commands.CreateTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
@@ -43,5 +44,11 @@ public class MappingProfile : Profile
         CreateMap<CreateCustomerCommand, Customer>();
         CreateMap<UpdateCustomerCommand, Customer>();
 
+
+        // =========================================================
+        // 4. INVENTORY (EŞYALAR) HARİTASI
+        // =========================================================
+        CreateMap<CreateInventoryItemCommand, InventoryItem>();
+        CreateMap<InventoryItem, InventoryItemDto>();
     }
 }

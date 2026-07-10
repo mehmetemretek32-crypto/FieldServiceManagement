@@ -1,6 +1,6 @@
 ﻿using FSM.Domain.Common;
 using FSM.Domain.Enums;
-
+using System.Collections.Generic; 
 namespace FSM.Domain.Entities;
 
 public class WorkOrder : BaseEntity
@@ -14,4 +14,5 @@ public class WorkOrder : BaseEntity
     public int CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
     public bool IsDeleted { get; set; } = false;
+    public ICollection<WorkOrderInventory> UsedParts { get; set; } = new List<WorkOrderInventory>();
 }

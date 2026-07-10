@@ -1,4 +1,5 @@
 ﻿using FSM.Domain.Common;
+using FSM.Domain.Entities;
 using System.Linq.Expressions;
 
 namespace FSM.Domain.Interfaces;
@@ -14,7 +15,7 @@ public interface IGenericRepository<T> where T : BaseEntity
 
     // ID dışında özel şartlarla arama yapmak için eklendi
     Task<T?> GetAsync(Expression<Func<T, bool>> predicate);
-
+    Task DeleteAsync(T entity);  
     // Asıl tetiği çekecek olan metodumuz (Fırını çalıştırır)
     Task<int> SaveChangesAsync();
 }
