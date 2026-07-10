@@ -8,4 +8,5 @@ public class CreateWorkOrderCommand : IRequest<int>
     public int CustomerId { get; set; }
     public string Description { get; set; } = string.Empty;
     public string Status { get; set; } = "Açık";
+    public int? TechnicianId { get; set; }
 }

@@ -11,5 +11,7 @@ public class InventoryItem : BaseEntity
 
     [Column(TypeName = "decimal(18,2)")] // Toplam 18 basamak, virgülden sonra 2 basamak (Kuruş)
     public decimal UnitPrice { get; set; }
-   
+
+    public bool IsDeleted { get; set; } = false;
+
 }
