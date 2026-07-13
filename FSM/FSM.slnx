@@ -2,5 +2,6 @@
   <Project Path="FSM.Application/FSM.Application.csproj" Id="91ba7b25-e5c7-4f9d-ac87-8659c3c7cafb" />
   <Project Path="FSM.Domain/FSM.Domain.csproj" Id="d118fba3-fd48-4833-b444-eb8d558cc65f" />
   <Project Path="FSM.Infrastructure/FSM.Infrastructure.csproj" Id="3969f502-924c-4375-8825-9c42849bd0f8" />
+  <Project Path="FSM.Tests/FSM.Tests.csproj" />
   <Project Path="FSM.WebAPI/FSM.WebAPI.csproj" Id="2dc03eae-f28a-4165-acd5-16ebe0bbf34f" />
 </Solution>
