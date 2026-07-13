@@ -1,6 +1,6 @@
 using AutoMapper;
+using FSM.Application.Features.Technican.Commands.CreateTechnician;
 using FSM.Application.Features.Technican.Queries.GetAllTechnician;
-using FSM.Application.Features.Technicians.Commands.CreateTechnician;
 using FSM.Application.Features.Technicians.Commands.DeleteTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
 using FSM.Application.Features.Technicians.Queries.GetTechnicianById;
@@ -25,13 +25,10 @@ public class CreateTechnicianCommandHandlerTests
             .Returns(Task.CompletedTask);
 
         var handler = new CreateTechnicianCommandHandler(_repository.Object, _mapper);
-
-        var id = await handler.Handle(new CreateTechnicianCommand
-        {
-            FullName = "Jane Doe",
-            Email = "jane@example.com",
-            PhoneNumber = "+905551112233"
-        }, CancellationToken.None);
+        var id = await handler.Handle(
+    new CreateTechnicianCommand("Jane Doe", "jane@example.com", "+905551112233"),
+    CancellationToken.None
+);
 
         Assert.Equal(42, id);
         _repository.Verify(r => r.AddAsync(It.Is<Technician>(t => t.FullName == "Jane Doe")), Times.Once);
@@ -111,7 +108,7 @@ public class GetAllTechniciansQueryHandlerTests
 {
     private readonly Mock<IGenericRepository<Technician>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
-
+    private readonly Mock<IGenericRepository<WorkOrder>> _workOrderRepository = new();
     [Fact]
     public async Task Handle_ReturnsOnlyActiveTechnicians()
     {
@@ -121,8 +118,7 @@ public class GetAllTechniciansQueryHandlerTests
             new() { Id = 2, FullName = "Deleted", IsDeleted = true }
         });
 
-        var handler = new GetAllTechniciansQueryHandler(_repository.Object, _mapper);
-
+        var handler = new GetAllTechniciansQueryHandler(_repository.Object, _workOrderRepository.Object, _mapper);
         var result = await handler.Handle(new GetAllTechniciansQuery(), CancellationToken.None);
 
         Assert.Single(result);

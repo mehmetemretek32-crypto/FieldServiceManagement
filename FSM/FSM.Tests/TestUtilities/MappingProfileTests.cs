@@ -2,7 +2,7 @@ using FSM.Application.DTOs;
 using FSM.Application.DTOs.Technicians;
 using FSM.Application.DTOs.WorkOrders;
 using FSM.Application.Features.Customers.Commands.CreateCustomer;
-using FSM.Application.Features.Technicians.Commands.CreateTechnician;
+using FSM.Application.Features.Technican.Commands.CreateTechnician;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
@@ -15,12 +15,7 @@ public class MappingProfileTests
     public void Maps_CreateTechnicianCommand_To_Technician()
     {
         var mapper = MapperFactory.Create();
-        var command = new CreateTechnicianCommand
-        {
-            FullName = "Jane Doe",
-            Email = "jane@example.com",
-            PhoneNumber = "+905551112233"
-        };
+        var command = new CreateTechnicianCommand("Jane Doe", "jane@example.com", "+905551112233");
 
         var technician = mapper.Map<Technician>(command);
 

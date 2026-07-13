@@ -67,6 +67,7 @@ public class CreateWorkOrderCommandHandler : IRequestHandler<CreateWorkOrderComm
         await _workOrderRepository.SaveChangesAsync(); // <-- İşte hayat kurtaran satır burası!
 
         // 6. SignalR / Bildirim Ateşlemesi
+        var customer = await _customerRepository.GetActiveByIdOrThrowAsync(request.CustomerId, "müşteri");
         await _notificationService.SendWorkOrderNotification($"#{entity.Id} no'lu yeni iş emri açıldı! Müşteri: {customer.FirstName} {customer.LastName} | Atanan: {technicianName}");
 
         return entity.Id;

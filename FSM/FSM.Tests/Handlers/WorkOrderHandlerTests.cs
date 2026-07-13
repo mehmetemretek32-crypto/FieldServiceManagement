@@ -83,12 +83,13 @@ public class CreateWorkOrderCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<WorkOrder>> _workOrders = new();
     private readonly Mock<IGenericRepository<Customer>> _customers = new();
+    private readonly Mock<IGenericRepository<Technician>> _technicians = new();
     private readonly Mock<INotificationService> _notifications = new();
     private readonly IMapper _mapper = MapperFactory.Create();
     private readonly IValidator<CreateWorkOrderCommand> _validator = new SharedCreateValidator();
 
     private CreateWorkOrderCommandHandler CreateHandler() =>
-        new(_workOrders.Object, _customers.Object, _mapper, _notifications.Object, _validator);
+    new(_workOrders.Object, _customers.Object, _technicians.Object, _mapper, _notifications.Object, _validator);
 
     private static CreateWorkOrderCommand ValidCommand() => new()
     {

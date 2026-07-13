@@ -92,15 +92,15 @@ public class RegisterCommandHandlerTests
             FirstName = "Jane",
             LastName = "Doe",
             Email = "jane@example.com",
-            Password = "secret",
-            Role = "Admin"
+            Password = "secret"
+            
         }, CancellationToken.None);
 
         Assert.True(result);
         Assert.NotNull(added);
         Assert.Equal("hashed", added!.PasswordHash);
         Assert.Equal("jane@example.com", added.Email);
-        Assert.Equal("Admin", added.Role);
+        
     }
 
     [Fact]

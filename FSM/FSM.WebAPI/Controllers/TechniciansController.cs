@@ -12,7 +12,7 @@ namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+//[Authorize]
 public class TechniciansController : ControllerBase
 {
     private readonly IMediator _mediator;
