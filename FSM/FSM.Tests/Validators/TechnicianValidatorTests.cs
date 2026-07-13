@@ -1,4 +1,4 @@
-using FSM.Application.Features.Technicians.Commands.CreateTechnician;
+using FSM.Application.Features.Technican.Commands.CreateTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
 using FSM.Application.Validators;
 
@@ -8,12 +8,9 @@ public class CreateTechnicianValidatorTests
 {
     private readonly CreateTechnicianCommandValidator _validator = new();
 
-    private static CreateTechnicianCommand ValidCommand() => new()
-    {
-        FullName = "Jane Doe",
-        Email = "jane@example.com",
-        PhoneNumber = "+905551112233"
-    };
+    // 1. HATA ÇÖZÜMÜ: Süslü parantez yerine parametreli Constructor kullanıyoruz.
+    private static CreateTechnicianCommand ValidCommand() =>
+        new("Jane Doe", "jane@example.com", "+905551112233");
 
     [Fact]
     public void Passes_For_ValidCommand()
@@ -28,8 +25,8 @@ public class CreateTechnicianValidatorTests
     [InlineData("J")]
     public void Fails_When_FullName_TooShortOrEmpty(string name)
     {
-        var command = ValidCommand();
-        command.FullName = name;
+        // 2. HATA ÇÖZÜMÜ: Record sonradan değiştirilemediği için hatalı ismi direkt yaratırken veriyoruz.
+        var command = new CreateTechnicianCommand(name, "jane@example.com", "+905551112233");
 
         var result = _validator.Validate(command);
 
@@ -42,8 +39,8 @@ public class CreateTechnicianValidatorTests
     [InlineData("not-an-email")]
     public void Fails_When_Email_Invalid(string email)
     {
-        var command = ValidCommand();
-        command.Email = email;
+        // 3. HATA ÇÖZÜMÜ
+        var command = new CreateTechnicianCommand("Jane Doe", email, "+905551112233");
 
         var result = _validator.Validate(command);
 
@@ -57,8 +54,8 @@ public class CreateTechnicianValidatorTests
     [InlineData("")]
     public void Fails_When_PhoneNumber_Invalid(string phone)
     {
-        var command = ValidCommand();
-        command.PhoneNumber = phone;
+        // 4. HATA ÇÖZÜMÜ
+        var command = new CreateTechnicianCommand("Jane Doe", "jane@example.com", phone);
 
         var result = _validator.Validate(command);
 

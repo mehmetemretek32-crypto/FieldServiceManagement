@@ -131,6 +131,7 @@ public class GetAllCustomersQueryHandlerTests
 {
     private readonly Mock<IGenericRepository<Customer>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
+    private readonly Mock<IGenericRepository<WorkOrder>> _workOrderRepository = new();
 
     [Fact]
     public async Task Handle_ReturnsOnlyActiveCustomers()
@@ -139,10 +140,9 @@ public class GetAllCustomersQueryHandlerTests
         {
             new() { Id = 1, FirstName = "Active", IsDeleted = false },
             new() { Id = 2, FirstName = "Deleted", IsDeleted = true }
+
         });
-
-        var handler = new GetAllCustomerwQueryHandler(_repository.Object, _mapper);
-
+        var handler = new GetAllCustomersQueryHandler(_repository.Object, _workOrderRepository.Object, _mapper);
         var result = (await handler.Handle(new GetAllCustomersQuery(), CancellationToken.None)).ToList();
 
         Assert.Single(result);
