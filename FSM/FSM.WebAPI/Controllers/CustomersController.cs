@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FSM.Application.Features.Customers.Commands.CreateCustomer;
 using FSM.Application.Features.Customers.Commands.UpdateCustomer;
@@ -10,6 +11,7 @@ namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class CustomersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -50,6 +52,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         await _mediator.Send(new DeleteCustomerCommand { Id = id });
