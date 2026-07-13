@@ -33,7 +33,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
             LastName = request.LastName,
             Email = request.Email,
             PasswordHash = _passwordHasher.HashPassword(request.Password), // Şifre burada Hash'leniyor!
-            Role = request.Role
+            Role = "Technician" // İstemciden gelen rol yok sayılır; güvenli varsayılan atanır.
         };
 
         // 3. Repository üzerinden kaydet

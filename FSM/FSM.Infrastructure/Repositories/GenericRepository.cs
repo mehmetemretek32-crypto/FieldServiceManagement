@@ -1,4 +1,5 @@
 ﻿using FSM.Domain.Common;
+using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using FSM.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -60,5 +61,12 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         // Veritabanına "Sadece benim gönderdiğim şarta uyan İLK kaydı getir" diyoruz.
         return await _dbSet.FirstOrDefaultAsync(predicate);
+    }
+
+    // 🔥 PRO DOKUNUŞ: Sadece InventoryItem için değil, tüm sınıflar (T) için çalışan asenkron silme metodu!
+    public Task DeleteAsync(T entity)
+    {
+        _dbSet.Remove(entity);
+        return Task.CompletedTask; // Remove işlemi Entity Framework'te asenkron olmadığı için Task.CompletedTask dönüyoruz.
     }
 }

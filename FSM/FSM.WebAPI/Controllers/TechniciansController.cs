@@ -1,7 +1,8 @@
-﻿using FSM.Application.Features.Technican.Queries.GetAllTechnician;
-using FSM.Application.Features.Technican.Commands.CreateTechnician;
+﻿using FSM.Application.Features.Technican.Commands.CreateTechnician;
+using FSM.Application.Features.Technican.Queries.GetAllTechnician;
 using FSM.Application.Features.Technicians.Commands.DeleteTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
+using FSM.Application.Features.Technicians.Commands.UpdateTechnicianAvailability;
 using FSM.Application.Features.Technicians.Queries.GetTechnicianById;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class TechniciansController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -37,6 +39,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateTechnicianCommand command)
     {
         var result = await _mediator.Send(command);
@@ -44,6 +47,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update([FromBody] UpdateTechnicianCommand command)
     {
         await _mediator.Send(command);
@@ -51,6 +55,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         await _mediator.Send(new DeleteTechnicianCommand { Id = id });
@@ -61,11 +66,15 @@ public class TechniciansController : ControllerBase
 
     // 1. TEKNİSYEN HIZLI DURUM DEĞİŞTİRME (Müsait <-> Meşgul)
     // PATCH: api/Technicians/5/availability?isAvailable=true
+    // 1. TEKNİSYEN HIZLI DURUM DEĞİŞTİRME (Müsait <-> Meşgul)
+    // PATCH: api/Technicians/5/availability?isAvailable=true
     [HttpPatch("{id}/availability")]
     public async Task<IActionResult> UpdateAvailability(int id, [FromQuery] bool isAvailable)
     {
-        // Not: Bunun için küçük bir UpdateTechnicianAvailabilityCommand yazacağız veya UpdateCommand kullanacağız
-        return Ok(new { message = $"Teknisyen statüsü '(Müsait: {isAvailable})' olarak güncellendi." });
+        // Artık taslak değil, gerçek MediatR komutunu ateşliyoruz!
+        var message = await _mediator.Send(new UpdateTechnicianAvailabilityCommand(id, isAvailable));
+
+        return Ok(new { message = message });
     }
 
     // 2. TEKNİSYENE ATANMIŞ İŞ EMİRLERİNİ GETİR (Teknisyen Kendi İşlerini Görür)
