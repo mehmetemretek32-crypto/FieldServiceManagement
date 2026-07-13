@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FluentValidation;
+using FSM.Application.Common;
 using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
@@ -42,12 +43,8 @@ public class CreateWorkOrderCommandHandler : IRequestHandler<CreateWorkOrderComm
             throw new ValidationException(validationResult.Errors);
         }
 
-        // 2. Müşteri Kontrolü (Zorunlu)
-        var customer = await _customerRepository.GetByIdAsync(request.CustomerId);
-        if (customer == null || customer.IsDeleted)
-        {
-            throw new Exception($"Hata: ID'si {request.CustomerId} olan aktif bir müşteri bulunamadı!");
-        }
+        // 2. Müşteri Kontrolü
+        await _customerRepository.GetActiveByIdOrThrowAsync(request.CustomerId, "müşteri");
 
         // 3. 🔥 YENİ: Teknisyen Kontrolü (Eğer bir teknisyen seçildiyse)
         string technicianName = "Atanmadı";

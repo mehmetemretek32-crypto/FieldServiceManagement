@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using FSM.Application.Common;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 
@@ -18,10 +19,7 @@ public class UpdateTechnicianCommandHandler : IRequestHandler<UpdateTechnicianCo
 
     public async Task<Unit> Handle(UpdateTechnicianCommand request, CancellationToken cancellationToken)
     {
-        var technician = await _repository.GetByIdAsync(request.Id);
-
-        if (technician == null || technician.IsDeleted)
-            throw new Exception($"ID'si {request.Id} olan aktif teknisyen bulunamadı!");
+        var technician = await _repository.GetActiveByIdOrThrowAsync(request.Id, "teknisyen");
 
         // Manuel güncellemeler:
         technician.FullName = request.FullName;

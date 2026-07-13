@@ -2,7 +2,7 @@
 
 namespace FSM.Domain.Entities;
 
-public class Customer : BaseEntity
+public class Customer : BaseEntity, ISoftDeletable
 {
     // Kişisel / Kurumsal Bilgiler
     public string FirstName { get; set; } = string.Empty;

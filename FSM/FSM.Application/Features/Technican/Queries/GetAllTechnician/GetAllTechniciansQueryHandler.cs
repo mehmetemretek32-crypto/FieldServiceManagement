@@ -1,10 +1,5 @@
 ﻿using AutoMapper;
-using FSM.Application.DTOs.Technicians;
-using FSM.Domain.Entities;
-using FSM.Domain.Interfaces;
-using MediatR;
-
-using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs.Technicians;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
@@ -32,7 +27,7 @@ public class GetAllTechniciansQueryHandler : IRequestHandler<GetAllTechniciansQu
     {
         // 1. Silinmemiş teknisyenleri getir
         var technicians = await _technicianRepository.GetAllAsync();
-        var activeTechnicians = technicians.Where(t => !t.IsDeleted).ToList();
+        var activeTechnicians = technicians.OnlyActive().ToList();
 
         // 2. Silinmemiş ve bir teknisyene atanmış iş emirlerini getir
         var workOrders = await _workOrderRepository.GetAllAsync();

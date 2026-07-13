@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 namespace FSM.Domain.Entities;
 
-public class Technician : BaseEntity
+public class Technician : BaseEntity, ISoftDeletable
 {
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

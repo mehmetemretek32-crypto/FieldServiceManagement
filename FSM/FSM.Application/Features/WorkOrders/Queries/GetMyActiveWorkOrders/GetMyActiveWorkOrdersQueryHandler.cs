@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs.WorkOrders;
 using FSM.Application.Features.WorkOrders;
 using FSM.Domain.Entities;
@@ -23,9 +24,9 @@ public class GetMyActiveWorkOrdersQueryHandler : IRequestHandler<GetMyActiveWork
         // Tüm iş emirlerini çekip filtrelüyoruz (Eğer repository'nde Where/Find metodu varsa direkt onu da kullanabilirsin)
         var allWorkOrders = await _workOrderRepository.GetAllAsync();
 
-        var myActiveOrders = allWorkOrders.Where(w =>
-            w.TechnicianId == request.TechnicianId &&
-            !w.IsDeleted);
+        var myActiveOrders = allWorkOrders
+            .OnlyActive()
+            .Where(w => w.TechnicianId == request.TechnicianId);
 
         return _mapper.Map<IEnumerable<WorkOrderDto>>(myActiveOrders);
     }

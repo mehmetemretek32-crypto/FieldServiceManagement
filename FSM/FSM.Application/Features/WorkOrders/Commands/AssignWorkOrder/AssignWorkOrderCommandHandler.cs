@@ -1,4 +1,5 @@
-﻿using FSM.Application.Interfaces;
+﻿using FSM.Application.Common;
+using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
@@ -24,14 +25,10 @@ public class AssignWorkOrderCommandHandler : IRequestHandler<AssignWorkOrderComm
 
     public async Task Handle(AssignWorkOrderCommand request, CancellationToken cancellationToken)
     {
-        var workOrder = await _workOrderRepository.GetByIdAsync(request.WorkOrderId);
-        var technician = await _technicianRepository.GetByIdAsync(request.TechnicianId);
+        var workOrder = await _workOrderRepository.GetByIdOrThrowAsync(request.WorkOrderId, "iş emri");
+        var technician = await _technicianRepository.GetByIdOrThrowAsync(request.TechnicianId, "teknisyen");
 
         // Mükemmel kontrollerin aynen duruyor
-        if (workOrder == null)
-            throw new Exception($"ID'si {request.WorkOrderId} olan iş emri bulunamadı.");
-        if (technician == null)
-            throw new Exception($"ID'si {request.TechnicianId} olan teknisyen bulunamadı.");
         if (technician.IsDeleted)
             throw new Exception("Sistemden silinmiş bir teknisyene yeni iş atanamaz!");
         if (!technician.IsAvailable)

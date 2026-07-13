@@ -3,7 +3,7 @@ using FSM.Domain.Enums;
 using System.Collections.Generic; 
 namespace FSM.Domain.Entities;
 
-public class WorkOrder : BaseEntity
+public class WorkOrder : BaseEntity, ISoftDeletable
 {
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

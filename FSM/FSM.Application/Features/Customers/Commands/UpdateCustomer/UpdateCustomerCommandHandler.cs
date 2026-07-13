@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using FSM.Application.Common;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces; // Repository arayüzünün olduğu namespace (projedeki yerine göre düzeltirsin)
 
@@ -20,10 +21,7 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
 
     public async Task<Unit> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
     {
-        var customer = await _repository.GetByIdAsync(request.Id);
-
-        if (customer == null || customer.IsDeleted)
-            throw new Exception($"ID'si {request.Id} olan müşteri bulunamadı!");
+        var customer = await _repository.GetActiveByIdOrThrowAsync(request.Id, "müşteri");
 
         // Verileri elle atayarak kuryeyi aradan çıkarıyoruz:
         customer.FirstName = request.Name; // Kendi özellik isimlerini yaz

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
@@ -27,12 +28,12 @@ public class GetAllCustomersQueryHandler : IRequestHandler<GetAllCustomersQuery,
     {
         // 1. Silinmemiş aktif müşterileri getir
         var customers = await _customerRepository.GetAllAsync();
-        var activeCustomers = customers.Where(c => !c.IsDeleted).ToList();
+        var activeCustomers = customers.OnlyActive().ToList();
 
         // 2. Silinmemiş tüm iş emirlerini getir ve Müşteri ID'sine göre grup yapıp sayılarını bul!
         var workOrders = await _workOrderRepository.GetAllAsync();
         var workOrderCounts = workOrders
-            .Where(w => !w.IsDeleted)
+            .OnlyActive()
             .GroupBy(w => w.CustomerId)
             .ToDictionary(g => g.Key, g => g.Count());
 

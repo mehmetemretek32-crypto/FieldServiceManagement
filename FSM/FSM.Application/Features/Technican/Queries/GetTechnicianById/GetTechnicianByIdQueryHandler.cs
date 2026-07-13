@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs.Technicians;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
@@ -19,13 +20,7 @@ public class GetTechnicianByIdQueryHandler : IRequestHandler<GetTechnicianByIdQu
 
     public async Task<TechnicianDto> Handle(GetTechnicianByIdQuery request, CancellationToken cancellationToken)
     {
-        var technician = await _repository.GetByIdAsync(request.Id);
-
-        // Hem nesne yoksa hem de Soft Delete ile silinmişse hata fırlatıyoruz!
-        if (technician == null || technician.IsDeleted)
-        {
-            throw new Exception($"ID'si {request.Id} olan aktif bir teknisyen bulunamadı!");
-        }
+        var technician = await _repository.GetActiveByIdOrThrowAsync(request.Id, "teknisyen");
 
         var dto = _mapper.Map<TechnicianDto>(technician);
         return dto;

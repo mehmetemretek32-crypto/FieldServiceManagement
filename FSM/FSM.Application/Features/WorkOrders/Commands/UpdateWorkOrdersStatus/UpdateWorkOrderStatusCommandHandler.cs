@@ -1,4 +1,5 @@
-﻿using FSM.Application.Interfaces;
+﻿using FSM.Application.Common;
+using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
@@ -19,9 +20,7 @@ public class UpdateWorkOrderStatusCommandHandler : IRequestHandler<UpdateWorkOrd
 
     public async Task<bool> Handle(UpdateWorkOrderStatusCommand request, CancellationToken cancellationToken)
     {
-        var workOrder = await _workOrderRepository.GetByIdAsync(request.WorkOrderId);
-        if (workOrder == null || workOrder.IsDeleted)
-            throw new Exception("İş emri bulunamadı!");
+        var workOrder = await _workOrderRepository.GetActiveByIdOrThrowAsync(request.WorkOrderId, "iş emri");
 
         // Durumu güvenli bir şekilde güncelleyelim:
         // (true parametresi büyük/küçük harf duyarlılığını ortadan kaldırır)
