@@ -64,12 +64,19 @@ namespace FSM.WebAPI.Controllers
             return Ok(new { message = "İş emri başarıyla güncellendi." });
         }
 
+        // Sürükle-Bırak (Drag & Drop) Takvim Atama İşlemi
         [HttpPost("assign")]
-        public async Task<IActionResult> AssignWorkOrder([FromBody] AssignWorkOrderDto dto)
+        public async Task<IActionResult> AssignWorkOrder([FromBody] AssignWorkOrderCommand command)
         {
-            var command = new AssignWorkOrderCommand { WorkOrderId = dto.WorkOrderId, TechnicianId = dto.TechnicianId };
-            await _mediator.Send(command);
-            return Ok(new { Message = "İş emri başarıyla teknisyene atandı!" });
+            // Arayüzden (Angular) gelen paketi alıp doğrudan MediatR üzerinden az önce yazdığımız Handler'a (işçiye) fırlatıyoruz.
+            var result = await _mediator.Send(command);
+
+            if (result)
+            {
+                return Ok(new { Message = "İş emri başarıyla planlandı ve teknisyene atandı!" });
+            }
+
+            return BadRequest("Atama işlemi sırasında bir hata oluştu.");
         }
 
         [HttpDelete("{id}")]

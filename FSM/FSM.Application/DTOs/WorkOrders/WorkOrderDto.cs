@@ -6,5 +6,8 @@ public record WorkOrderDto(
     string Description,
     string State,
     DateTime CreatedAt,
-    int CustomerId
+    int CustomerId,
+    DateTime? ScheduledStartDate, // 👈 İŞTE TAKVİMİ DOLDURACAK OLAN EKSİK KAN
+    DateTime? ScheduledEndDate,   // 👈 BİTİŞ TARİHİ
+    int? TechnicianId             // 👈 Hazır el atmışken bunu da ekleyelim, teknisyenleri filtrelerken lazım olacak
 );

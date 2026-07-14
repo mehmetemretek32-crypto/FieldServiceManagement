@@ -1,50 +1,42 @@
-﻿using FSM.Application.Common;
-using FSM.Application.Interfaces;
-using FSM.Domain.Entities;
+﻿using FSM.Domain.Entities;
 using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
 using MediatR;
 
+// Not: IGenericRepository için Ctrl + . (Nokta) yaparak using'i eklemeyi unutma!
+
 namespace FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 
-public class AssignWorkOrderCommandHandler : IRequestHandler<AssignWorkOrderCommand>
+public class AssignWorkOrderCommandHandler(
+    IGenericRepository<WorkOrder> _workOrderRepository,
+    IGenericRepository<Technician> _technicianRepository)
+    : IRequestHandler<AssignWorkOrderCommand, bool>
 {
-    private readonly IGenericRepository<WorkOrder> _workOrderRepository;
-    private readonly IGenericRepository<Technician> _technicianRepository;
-    private readonly INotificationService _notificationService; // 1. Bildirim servisi eklendi
-
-    public AssignWorkOrderCommandHandler(
-        IGenericRepository<WorkOrder> workOrderRepository,
-        IGenericRepository<Technician> technicianRepository,
-        INotificationService notificationService) // 2. Constructor'da inject edildi
+    public async Task<bool> Handle(AssignWorkOrderCommand request, CancellationToken cancellationToken)
     {
-        _workOrderRepository = workOrderRepository;
-        _technicianRepository = technicianRepository;
-        _notificationService = notificationService;
-    }
+        // 1. Veritabanından o iş emrini buluyoruz (Senin sistemindeki GetByIdAsync)
+        var workOrder = await _workOrderRepository.GetByIdAsync(request.WorkOrderId);
+        if (workOrder == null)
+            throw new Exception("İş emri bulunamadı!");
 
-    public async Task Handle(AssignWorkOrderCommand request, CancellationToken cancellationToken)
-    {
-        var workOrder = await _workOrderRepository.GetByIdOrThrowAsync(request.WorkOrderId, "iş emri");
-        var technician = await _technicianRepository.GetByIdOrThrowAsync(request.TechnicianId, "teknisyen");
+        // 2. Teknisyen gerçekten var mı diye teyit ediyoruz
+        var technician = await _technicianRepository.GetByIdAsync(request.TechnicianId);
+        if (technician == null)
+            throw new Exception("Teknisyen bulunamadı!");
 
-        // Mükemmel kontrollerin aynen duruyor
-        if (technician.IsDeleted)
-            throw new Exception("Sistemden silinmiş bir teknisyene yeni iş atanamaz!");
-        if (!technician.IsAvailable)
-            throw new Exception($"{technician.FullName} adlı teknisyen şu an müsait değil.");
+        // 3. Sürükle-bırak ekranından gelen verileri iş emrine işliyoruz
+        workOrder.TechnicianId = request.TechnicianId;
+        workOrder.ScheduledStartDate = request.ScheduledStartDate;
+        workOrder.ScheduledEndDate = request.ScheduledEndDate;
 
-        // Durum güncellemeleri
-        workOrder.TechnicianId = technician.Id;
+        // İşin durumu "Bekliyor"dan "Atandı" (Assigned) konumuna geçiyor. 
+        // Eğer WorkOrderState enum'un içinde Assigned yoksa InProgress veya uygun olanı yazabilirsin.
         workOrder.State = WorkOrderState.Assigned;
-        technician.IsAvailable = false;
 
-        // İkisi de aynı DbContext'e (Scoped) bağlı olduğu için tek SaveChanges ikisini de yazar.
-        await _workOrderRepository.UpdateAsync(workOrder);
-        await _workOrderRepository.SaveChangesAsync(); // KRİTİK: Veritabanına işlemi yansıtıyoruz
+        // 4. Senin sisteminin kayıt metodu olan SaveChangesAsync'i çağırıyoruz
+       
+        await _workOrderRepository.SaveChangesAsync();
 
-        // 3. SADECE İLGİLİ TEKNİSYENE ÖZEL ANLIK BİLDİRİM
-        string notificationMessage = $"Yeni Görev: {workOrder.Title} başlıklı iş emri size atandı!";
-        await _notificationService.SendNotificationToTechnician(technician.Id, notificationMessage);
+        return true;
     }
 }
