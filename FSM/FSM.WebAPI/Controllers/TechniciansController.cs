@@ -4,6 +4,7 @@ using FSM.Application.Features.Technicians.Commands.DeleteTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnician;
 using FSM.Application.Features.Technicians.Commands.UpdateTechnicianAvailability;
 using FSM.Application.Features.Technicians.Queries.GetTechnicianById;
+using FSM.Application.Features.Technicians.Queries.GetTopTechnicians;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -94,5 +95,11 @@ public class TechniciansController : ControllerBase
     {
         // İleride buraya: Adminlere özel silinmiş teknisyenleri veya tamamladığı toplam iş sayısını çeken sorgu gelecek
         return Ok(new { Message = "Admin yetkisiyle tüm teknisyen performans ve pasiflik kayıtları görüntüleniyor." });
+    }
+    [HttpGet("top-performance")]
+    public async Task<IActionResult> GetTopPerformance()
+    {
+        var result = await _mediator.Send(new GetTopTechniciansQuery());
+        return Ok(result);
     }
 }

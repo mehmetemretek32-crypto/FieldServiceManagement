@@ -20,15 +20,16 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
     // Task yerine Task<Unit> olması şart!
     public async Task<Unit> Handle(UpdateWorkOrderCommand request, CancellationToken cancellationToken)
     {
-        var workOrder = await _workOrderRepository.GetByIdOrThrowAsync(request.Id, "iş emri");
+        var workOrder = await _workOrderRepository.GetByIdAsync(request.Id);
 
-        // Mapper, request'teki alanları var olan workOrder içine yazar
-        _mapper.Map(request, workOrder);
+        // Verileri doğrudan aktar (AutoMapper'ı devre dışı bırakıp manuel yapıyoruz ki hata payı kalmasın)
+        workOrder.Title = request.Title;
+        workOrder.Description = request.Description;
+        workOrder.State = (FSM.Domain.Enums.WorkOrderState)request.Status;
+        workOrder.TechnicianId = request.TechnicianId;
+        workOrder.CustomerId = request.CustomerId;
 
         await _workOrderRepository.UpdateAsync(workOrder);
-
-        // MediatR'ın beklediği boş dönüş değeri
         return Unit.Value;
     }
 }
-

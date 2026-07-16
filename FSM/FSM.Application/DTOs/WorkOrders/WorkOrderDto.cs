@@ -1,13 +1,11 @@
-﻿namespace FSM.Application.DTOs.WorkOrders;
-
-public record WorkOrderDto(
-    int Id,
-    string Title,
-    string Description,
-    string State,
-    DateTime CreatedAt,
-    int CustomerId,
-    DateTime? ScheduledStartDate, // 👈 İŞTE TAKVİMİ DOLDURACAK OLAN EKSİK KAN
-    DateTime? ScheduledEndDate,   // 👈 BİTİŞ TARİHİ
-    int? TechnicianId             // 👈 Hazır el atmışken bunu da ekleyelim, teknisyenleri filtrelerken lazım olacak
-);
+﻿public class WorkOrderDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int State { get; set; } // int olarak tutuyoruz
+    public DateTime CreatedAt { get; set; }
+    public int CustomerId { get; set; }
+    public int? TechnicianId { get; set; }
+    public string TechnicianName { get; set; } = string.Empty;
+}

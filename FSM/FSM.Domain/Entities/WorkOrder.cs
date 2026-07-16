@@ -12,6 +12,7 @@ public class WorkOrder : BaseEntity, ISoftDeletable
     public WorkOrderState State { get; set; } = WorkOrderState.Pending;
 
     public int? TechnicianId { get; set; }
+    public virtual Technician Technician { get; set; }
 
     // --- TAKVİM (SCHEDULER) İÇİN YENİ EKLENEN KISIM ---
     public DateTime? ScheduledStartDate { get; set; } // Planlanan Başlangıç Saati

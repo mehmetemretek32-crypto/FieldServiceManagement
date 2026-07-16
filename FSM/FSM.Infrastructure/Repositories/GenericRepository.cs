@@ -69,4 +69,10 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
         _dbSet.Remove(entity);
         return Task.CompletedTask; // Remove işlemi Entity Framework'te asenkron olmadığı için Task.CompletedTask dönüyoruz.
     }
+
+    public IQueryable<T> GetAllAsQueryable()
+    {
+        // DbSet'i IQueryable olarak dışarı açıyoruz ki Handler içinde Include yapabilelim
+        return _context.Set<T>().AsQueryable();
+    }
 }

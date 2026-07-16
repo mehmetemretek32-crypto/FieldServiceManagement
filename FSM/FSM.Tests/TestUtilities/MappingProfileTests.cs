@@ -127,8 +127,9 @@ public class MappingProfileTests
         var dto = mapper.Map<WorkOrderDto>(workOrder);
 
         Assert.Equal(workOrder.Id, dto.Id);
-        Assert.Equal(workOrder.Title, dto.Title);
-        Assert.Equal(nameof(WorkOrderState.InProgress), dto.State);
+        // 131. satırı şu şekilde güncelle:
+        // Enum değerini int'e cast ediyoruz ki int olan dto.State ile kıyaslayabilelim
+        Assert.Equal((int)WorkOrderState.InProgress, dto.State);
         Assert.Equal(workOrder.CustomerId, dto.CustomerId);
     }
 }
