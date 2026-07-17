@@ -1,6 +1,7 @@
 ﻿using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
+using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisini çağırdık
 
 namespace FSM.Application.Features.Inventories.Commands.UpdateInventoryItem;
 
@@ -17,9 +18,16 @@ internal sealed class UpdateInventoryItemCommandHandler : IRequestHandler<Update
 {
     private readonly IGenericRepository<InventoryItem> _repository;
 
-    public UpdateInventoryItemCommandHandler(IGenericRepository<InventoryItem> repository)
+    // 1. Bildirim servisi tanımı
+    private readonly INotificationService _notificationService; // <-- EKLENDİ
+
+    // 2. Constructor içine enjekte edilmesi
+    public UpdateInventoryItemCommandHandler(
+        IGenericRepository<InventoryItem> repository,
+        INotificationService notificationService) // <-- EKLENDİ
     {
         _repository = repository;
+        _notificationService = notificationService; // <-- EKLENDİ
     }
 
     public async Task<string> Handle(UpdateInventoryItemCommand request, CancellationToken cancellationToken)
@@ -36,7 +44,12 @@ internal sealed class UpdateInventoryItemCommandHandler : IRequestHandler<Update
         entity.UnitPrice = request.UnitPrice;
 
         await _repository.UpdateAsync(entity);
-        await _repository.SaveChangesAsync();
+        await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
+
+        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
+        await _notificationService.SendWorkOrderNotification(
+            $"🔄 Envanter Güncellendi: [{entity.SkuCode}] {entity.Name} (Yeni Stok: {entity.StockQuantity})"
+        );
 
         return $"[{entity.SkuCode}] barkodlu malzeme başarıyla güncellendi!";
     }

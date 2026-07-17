@@ -1,4 +1,5 @@
 ﻿using FSM.Application.Common;
+using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisi için interface'i çağırdık
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
@@ -9,24 +10,27 @@ namespace FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderCommand, Unit>
 {
     private readonly IGenericRepository<WorkOrder> _workOrderRepository;
-
-    // 1. Teknisyen tablosuna erişmek için yeni Repository tanımı
     private readonly IGenericRepository<Technician> _technicianRepository;
 
-    // 2. Constructor (Yapıcı Metot) içine Teknisyen Repository'sinin enjekte edilmesi
+    // 1. Bildirim servisi tanımı
+    private readonly INotificationService _notificationService; // <-- EKLENDİ
+
+    // 2. Constructor içine enjekte edilmesi
     public UpdateWorkOrderCommandHandler(
         IGenericRepository<WorkOrder> workOrderRepository,
-        IGenericRepository<Technician> technicianRepository)
+        IGenericRepository<Technician> technicianRepository,
+        INotificationService notificationService) // <-- EKLENDİ
     {
         _workOrderRepository = workOrderRepository;
-        _technicianRepository = technicianRepository; // Atamanın yapılması
+        _technicianRepository = technicianRepository;
+        _notificationService = notificationService; // <-- EKLENDİ
     }
 
     public async Task<Unit> Handle(UpdateWorkOrderCommand request, CancellationToken cancellationToken)
     {
         var workOrder = await _workOrderRepository.GetActiveByIdOrThrowAsync(request.Id, "iş emri");
 
-        // 3. İş Kuralı (Business Rule): Teknisyen uygunluk kontrolü
+        // İş Kuralı: Teknisyen uygunluk kontrolü
         if (request.TechnicianId.HasValue && request.TechnicianId.Value > 0)
         {
             var technician = await _technicianRepository.GetByIdAsync(request.TechnicianId.Value);
@@ -37,15 +41,21 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
             }
         }
 
-        // 4. Verilerin Güncellenmesi
+        // Verilerin Güncellenmesi
         workOrder.Title = request.Title;
         workOrder.Description = request.Description;
         workOrder.State = (WorkOrderState)request.State;
         workOrder.TechnicianId = request.TechnicianId;
         workOrder.CustomerId = request.CustomerId;
 
-        // 5. Kaydetme
+        // Kaydetme
         await _workOrderRepository.SaveChangesAsync();
+
+        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
+        // Veritabanına başarıyla yazıldıktan sonra tüm bağlı istemcilere haber veriyoruz.
+        await _notificationService.SendWorkOrderNotification(
+            $"#{workOrder.Id} numaralı iş emri güncellendi!"
+        );
 
         return Unit.Value;
     }
