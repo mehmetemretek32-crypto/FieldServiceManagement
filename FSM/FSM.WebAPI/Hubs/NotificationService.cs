@@ -14,7 +14,8 @@ public class NotificationService : INotificationService
 
     public async Task SendWorkOrderNotification(string message)
     {
-        await _hubContext.Clients.All.SendAsync("ReceiveWorkOrder", message);
+        // İsim Angular'daki dinleyici ile aynı olmalı
+        await _hubContext.Clients.All.SendAsync("ReceiveWorkOrderUpdate", message);
     }
 
     // YENİ METOT: Sadece ilgili teknisyenin grubuna mesaj gönderir

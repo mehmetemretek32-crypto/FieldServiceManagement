@@ -2,6 +2,7 @@
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
+using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisini çağırdık
 
 namespace FSM.Application.Features.Inventories.Commands.CreateInventoryItem;
 
@@ -18,10 +19,18 @@ internal sealed class CreateInventoryItemCommandHandler : IRequestHandler<Create
     private readonly IGenericRepository<InventoryItem> _repository;
     private readonly IMapper _mapper;
 
-    public CreateInventoryItemCommandHandler(IGenericRepository<InventoryItem> repository, IMapper mapper)
+    // 1. Bildirim servisi tanımı
+    private readonly INotificationService _notificationService; // <-- EKLENDİ
+
+    // 2. Constructor içine enjekte edilmesi
+    public CreateInventoryItemCommandHandler(
+        IGenericRepository<InventoryItem> repository,
+        IMapper mapper,
+        INotificationService notificationService) // <-- EKLENDİ
     {
         _repository = repository;
         _mapper = mapper;
+        _notificationService = notificationService; // <-- EKLENDİ
     }
 
     public async Task<int> Handle(CreateInventoryItemCommand request, CancellationToken cancellationToken)
@@ -34,7 +43,12 @@ internal sealed class CreateInventoryItemCommandHandler : IRequestHandler<Create
 
         // Generic Repository üzerinden veritabanına ekle
         await _repository.AddAsync(entity);
-        await _repository.SaveChangesAsync();
+        await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
+
+        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
+        await _notificationService.SendWorkOrderNotification(
+            $"📦 Yeni Malzeme Eklendi: {entity.Name} (Stok: {entity.StockQuantity})"
+        );
 
         // Eklenen malzemenin ID'sini geri dön
         return entity.Id;
