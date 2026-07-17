@@ -33,9 +33,7 @@ public class MappingProfile : Profile
         // Command'den Entity'ye:
         CreateMap<CreateWorkOrderCommand, WorkOrder>();
         CreateMap<UpdateWorkOrderCommand, WorkOrder>()
-            // Güncellemede mevcut veriyi bozmamak veya manuel kontrol etmek için bazen eşlemeleri dışarıda tutmak gerekebilir,
-            // ancak temel alanları otomatik eşlemesi için bu satır yeterlidir:
-            .ForMember(dest => dest.State, opt => opt.MapFrom(src => (FSM.Domain.Enums.WorkOrderState)src.Status));
+            .ForMember(dest => dest.State, opt => opt.MapFrom(src => (FSM.Domain.Enums.WorkOrderState)src.State));
 
         // ====================================================
         // 2. TECHNICIAN (TEKNİSYENLER) HARİTASI

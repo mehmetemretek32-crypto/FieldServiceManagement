@@ -54,7 +54,15 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 
     public async Task UpdateAsync(T entity)
     {
-        _dbSet.Update(entity);
+        // FindAsync ile gelen entity zaten izleniyor (tracked). Update() tüm navigation
+        // property'leri Modified yapar ve DbUpdateConcurrencyException tetikleyebilir.
+        var entry = _context.Entry(entity);
+        if (entry.State == EntityState.Detached)
+        {
+            _dbSet.Update(entity);
+        }
+
+        entity.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
     public async Task<T?> GetAsync(Expression<Func<T, bool>> predicate)

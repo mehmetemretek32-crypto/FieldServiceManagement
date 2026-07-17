@@ -1,31 +1,27 @@
-﻿using AutoMapper;
-using MediatR;
-using FSM.Application.Common;
+﻿using FSM.Application.Common;
 using FSM.Domain.Entities;
+using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
+using MediatR;
 
 namespace FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 
 public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderCommand, Unit>
 {
     private readonly IGenericRepository<WorkOrder> _workOrderRepository;
-    private readonly IMapper _mapper;
 
-    public UpdateWorkOrderCommandHandler(IGenericRepository<WorkOrder> workOrderRepository, IMapper mapper)
+    public UpdateWorkOrderCommandHandler(IGenericRepository<WorkOrder> workOrderRepository)
     {
         _workOrderRepository = workOrderRepository;
-        _mapper = mapper;
     }
 
-    // Task yerine Task<Unit> olması şart!
     public async Task<Unit> Handle(UpdateWorkOrderCommand request, CancellationToken cancellationToken)
     {
-        var workOrder = await _workOrderRepository.GetByIdAsync(request.Id);
+        var workOrder = await _workOrderRepository.GetActiveByIdOrThrowAsync(request.Id, "iş emri");
 
-        // Verileri doğrudan aktar (AutoMapper'ı devre dışı bırakıp manuel yapıyoruz ki hata payı kalmasın)
         workOrder.Title = request.Title;
         workOrder.Description = request.Description;
-        workOrder.State = (FSM.Domain.Enums.WorkOrderState)request.Status;
+        workOrder.State = (WorkOrderState)request.State;
         workOrder.TechnicianId = request.TechnicianId;
         workOrder.CustomerId = request.CustomerId;
 

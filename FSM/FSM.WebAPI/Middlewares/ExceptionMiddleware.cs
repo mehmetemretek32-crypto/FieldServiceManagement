@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace FSM.WebAPI.Middlewares;
 
@@ -31,8 +32,11 @@ public class ExceptionMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        // Bizim fırlattığımız iş kuralları (throw new Exception) genelde 400 Bad Request'tir.
-        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        context.Response.StatusCode = exception switch
+        {
+            DbUpdateConcurrencyException => (int)HttpStatusCode.Conflict,
+            _ => (int)HttpStatusCode.BadRequest
+        };
 
         var response = new
         {
