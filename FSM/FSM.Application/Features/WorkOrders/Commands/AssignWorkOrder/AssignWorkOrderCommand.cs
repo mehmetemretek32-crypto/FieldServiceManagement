@@ -1,9 +1,12 @@
 ﻿using MediatR;
+using System;
 
 namespace FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 
-public class AssignWorkOrderCommand : IRequest
-{
-    public int WorkOrderId { get; set; }
-    public int TechnicianId { get; set; }
-}
+// Arayüzden gelecek olan veriyi taşıyan o jilet gibi Record yapımız:
+public record AssignWorkOrderCommand(
+    int WorkOrderId,
+    int TechnicianId,
+    DateTime ScheduledStartDate,
+    DateTime ScheduledEndDate
+) : IRequest<bool>; // İşlem başarılı olursa geriye true/false döneceğiz.

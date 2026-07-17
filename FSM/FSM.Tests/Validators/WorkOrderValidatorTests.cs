@@ -14,7 +14,9 @@ public class AssignWorkOrderValidatorTests
     [Fact]
     public void Passes_For_ValidCommand()
     {
-        var result = _validator.Validate(new AssignWorkOrderCommand { WorkOrderId = 1, TechnicianId = 2 });
+        // 1. HATA ÇÖZÜMÜ: Süslü parantez yerine normal parantez ve 4 parametre
+        var command = new AssignWorkOrderCommand(1, 2, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+        var result = _validator.Validate(command);
 
         Assert.True(result.IsValid);
     }
@@ -25,11 +27,9 @@ public class AssignWorkOrderValidatorTests
     [InlineData(-1, -1)]
     public void Fails_When_Ids_NotPositive(int workOrderId, int technicianId)
     {
-        var result = _validator.Validate(new AssignWorkOrderCommand
-        {
-            WorkOrderId = workOrderId,
-            TechnicianId = technicianId
-        });
+        // 2. HATA ÇÖZÜMÜ: Yukarıdan gelen parametreleri ve uydurma tarihleri ekliyoruz
+        var command = new AssignWorkOrderCommand(workOrderId, technicianId, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+        var result = _validator.Validate(command);
 
         Assert.False(result.IsValid);
     }

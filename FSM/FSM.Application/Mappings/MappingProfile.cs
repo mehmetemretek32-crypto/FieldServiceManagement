@@ -17,14 +17,23 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // ====================================================
         // 1. WORK ORDER (İŞ EMİRLERİ) HARİTASI
         // ====================================================
-        CreateMap<WorkOrder, WorkOrderDto>();
+
+        // Okuma (Read) işlemleri için: Veritabanından DTO'ya özel eşleme
+        CreateMap<WorkOrder, WorkOrderDto>()
+            .ForMember(dest => dest.State, opt => opt.MapFrom(src => (int)src.State))
+            .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src =>
+                src.Technician != null ? src.Technician.FullName : "Henüz Atanmadı"));
+
+        // Yazma (Write/Update) işlemleri için:
         CreateMap<CreateWorkOrderDto, CreateWorkOrderCommand>();
         CreateMap<UpdateWorkOrderDto, UpdateWorkOrderCommand>();
+
+        // Command'den Entity'ye:
         CreateMap<CreateWorkOrderCommand, WorkOrder>();
-        CreateMap<UpdateWorkOrderCommand, WorkOrder>();
+        CreateMap<UpdateWorkOrderCommand, WorkOrder>()
+            .ForMember(dest => dest.State, opt => opt.MapFrom(src => (FSM.Domain.Enums.WorkOrderState)src.State));
 
         // ====================================================
         // 2. TECHNICIAN (TEKNİSYENLER) HARİTASI

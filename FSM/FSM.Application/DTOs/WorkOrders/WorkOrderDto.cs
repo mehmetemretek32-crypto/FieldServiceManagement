@@ -1,10 +1,11 @@
-﻿namespace FSM.Application.DTOs.WorkOrders;
-
-public record WorkOrderDto(
-    int Id,
-    string Title,
-    string Description,
-    string State,
-    DateTime CreatedAt,
-    int CustomerId
-);
+﻿public class WorkOrderDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int State { get; set; } // int olarak tutuyoruz
+    public DateTime CreatedAt { get; set; }
+    public int CustomerId { get; set; }
+    public int? TechnicianId { get; set; }
+    public string TechnicianName { get; set; } = string.Empty;
+}

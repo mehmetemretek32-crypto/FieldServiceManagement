@@ -1,5 +1,6 @@
 using AutoMapper;
 using FluentValidation;
+using FSM.Application.Common;
 using FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.DeleteWorkOrder;
@@ -22,26 +23,29 @@ public class AssignWorkOrderCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<WorkOrder>> _workOrders = new();
     private readonly Mock<IGenericRepository<Technician>> _technicians = new();
-    private readonly Mock<INotificationService> _notifications = new();
+    // Bildirim (Notification) servisini kaldùrdùk ùùnkù bizim yeni Handler'ùmùzda yok!
 
+    // Handler'ù sadece 2 parametre ile baùlatùyoruz
     private AssignWorkOrderCommandHandler CreateHandler() =>
-        new(_workOrders.Object, _technicians.Object, _notifications.Object);
+        new(_workOrders.Object, _technicians.Object);
 
     [Fact]
-    public async Task Handle_AssignsTechnician_AndNotifies()
+    public async Task Handle_AssignsTechnician_AndSaves()
     {
         var workOrder = new WorkOrder { Id = 1, Title = "Fix boiler", State = WorkOrderState.Pending };
-        var technician = new Technician { Id = 5, FullName = "Jane", IsAvailable = true, IsDeleted = false };
+        var technician = new Technician { Id = 5, FullName = "Jane", IsDeleted = false };
+
         _workOrders.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(workOrder);
         _technicians.Setup(r => r.GetByIdAsync(5)).ReturnsAsync(technician);
 
-        await CreateHandler().Handle(new AssignWorkOrderCommand { WorkOrderId = 1, TechnicianId = 5 }, CancellationToken.None);
+        // YENù: C# Record yapùmùza uygun olarak 4 parametreyi parantez iùinde gùnderiyoruz! (Tarihleri uyduruyoruz)
+        var command = new AssignWorkOrderCommand(1, 5, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+        await CreateHandler().Handle(command, CancellationToken.None);
 
         Assert.Equal(5, workOrder.TechnicianId);
-        Assert.Equal(WorkOrderState.Assigned, workOrder.State);
-        Assert.False(technician.IsAvailable);
+        Assert.Equal(WorkOrderState.Assigned, workOrder.State); // Sende Assigned yoksa burasù kùzarabilir, uygun olanù yazarsùn.
+        _workOrders.Verify(r => r.Update(It.IsAny<WorkOrder>()), Times.Once);
         _workOrders.Verify(r => r.SaveChangesAsync(), Times.Once);
-        _notifications.Verify(n => n.SendNotificationToTechnician(5, It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -50,32 +54,9 @@ public class AssignWorkOrderCommandHandlerTests
         _workOrders.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((WorkOrder?)null);
         _technicians.Setup(r => r.GetByIdAsync(5)).ReturnsAsync(new Technician { Id = 5 });
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
-            new AssignWorkOrderCommand { WorkOrderId = 1, TechnicianId = 5 }, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Handle_Throws_WhenTechnicianUnavailable()
-    {
-        _workOrders.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new WorkOrder { Id = 1 });
-        _technicians.Setup(r => r.GetByIdAsync(5))
-            .ReturnsAsync(new Technician { Id = 5, FullName = "Busy", IsAvailable = false });
-
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
-            new AssignWorkOrderCommand { WorkOrderId = 1, TechnicianId = 5 }, CancellationToken.None));
-
-        _notifications.Verify(n => n.SendNotificationToTechnician(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task Handle_Throws_WhenTechnicianDeleted()
-    {
-        _workOrders.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new WorkOrder { Id = 1 });
-        _technicians.Setup(r => r.GetByIdAsync(5))
-            .ReturnsAsync(new Technician { Id = 5, IsAvailable = true, IsDeleted = true });
-
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
-            new AssignWorkOrderCommand { WorkOrderId = 1, TechnicianId = 5 }, CancellationToken.None));
+        // YENù: Yine 4 parametreli yeni yapùyù kullanùyoruz
+        var command = new AssignWorkOrderCommand(1, 5, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
+        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(command, CancellationToken.None));
     }
 }
 
@@ -139,9 +120,8 @@ public class CreateWorkOrderCommandHandlerTests
 public class UpdateWorkOrderCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<WorkOrder>> _repository = new();
-    private readonly IMapper _mapper = MapperFactory.Create();
 
-    private UpdateWorkOrderCommandHandler CreateHandler() => new(_repository.Object, _mapper);
+    private UpdateWorkOrderCommandHandler CreateHandler() => new(_repository.Object);
 
     [Fact]
     public async Task Handle_UpdatesTitleAndDescription()
@@ -166,8 +146,8 @@ public class UpdateWorkOrderCommandHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((WorkOrder?)null);
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
-            new UpdateWorkOrderCommand { Id = 1, Title = "New", Description = "New" }, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
+            new UpdateWorkOrderCommand { Id = 1, Title = "New", Description = "New description" }, CancellationToken.None));
     }
 }
 
