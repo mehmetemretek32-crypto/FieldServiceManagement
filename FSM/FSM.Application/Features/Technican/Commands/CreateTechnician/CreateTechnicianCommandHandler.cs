@@ -1,8 +1,9 @@
 ﻿using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
-using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisini çağırdık
+using FSM.Application.Interfaces;
 using MediatR;
-using AutoMapper; // IMapper için gerekli olabilir
+using AutoMapper;
+using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS EKLENDİ
 
 namespace FSM.Application.Features.Technican.Commands.CreateTechnician;
 
@@ -10,24 +11,23 @@ public class CreateTechnicianCommandHandler : IRequestHandler<CreateTechnicianCo
 {
     private readonly IGenericRepository<Technician> _technicianRepository;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
+    private readonly IDistributedCache _cache; // 🔥 EKLENDİ
 
-    // 1. Bildirim servisi tanımı
-    private readonly INotificationService _notificationService; // <-- EKLENDİ
-
-    // 2. Constructor içine enjekte edilmesi
     public CreateTechnicianCommandHandler(
         IGenericRepository<Technician> technicianRepository,
         IMapper mapper,
-        INotificationService notificationService) // <-- EKLENDİ
+        INotificationService notificationService,
+        IDistributedCache cache) // 🔥 EKLENDİ
     {
         _technicianRepository = technicianRepository;
         _mapper = mapper;
-        _notificationService = notificationService; // <-- EKLENDİ
+        _notificationService = notificationService;
+        _cache = cache; // 🔥 EŞLEŞTİRİLDİ
     }
 
     public async Task<int> Handle(CreateTechnicianCommand request, CancellationToken cancellationToken)
     {
-        // 1. Gelen Command verisini yeni bir Technician entity nesnesine çeviriyoruz
         var newTechnician = new Technician
         {
             FullName = request.FullName,
@@ -37,18 +37,18 @@ public class CreateTechnicianCommandHandler : IRequestHandler<CreateTechnicianCo
             IsDeleted = false
         };
 
-        // 2. Veritabanına ekle
         await _technicianRepository.AddAsync(newTechnician);
+        await _technicianRepository.SaveChangesAsync(); // Fırın çalıştı 🔥
 
-        // 3. Fırını çalıştır (Değişiklikleri kaydet) 🔥
-        await _technicianRepository.SaveChangesAsync();
+        // 👇 🔥 ÇEKMECELERİ TEMİZLİYORUZ (Cache Invalidation)
+        // Teknisyen eklendiği için hem genel listeyi hem de Top 5 listesini siliyoruz!
+        await _cache.RemoveAsync("all_technicians_list", cancellationToken);
+        await _cache.RemoveAsync("top_technicians_list", cancellationToken);
 
-        // 4. 👇 YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
         await _notificationService.SendWorkOrderNotification(
             $"🔧 Yeni Teknisyen Sisteme Eklendi: {newTechnician.FullName}"
         );
 
-        // 5. Yeni oluşan ID'yi geriye döndür
         return newTechnician.Id;
     }
 }

@@ -1,11 +1,11 @@
 ﻿using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
-using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisini çağırdık
+using FSM.Application.Interfaces;
+using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS EKLENDİ
 
 namespace FSM.Application.Features.Inventories.Commands.UpdateInventoryItem;
 
-// 🔥 KOMUT: Güncellenecek veriler (Id zorunlu)
 public sealed record UpdateInventoryItemCommand(
     int Id,
     string Name,
@@ -13,21 +13,20 @@ public sealed record UpdateInventoryItemCommand(
     int StockQuantity,
     decimal UnitPrice) : IRequest<string>;
 
-// 🔥 İŞLEYİCİ
 internal sealed class UpdateInventoryItemCommandHandler : IRequestHandler<UpdateInventoryItemCommand, string>
 {
     private readonly IGenericRepository<InventoryItem> _repository;
+    private readonly INotificationService _notificationService;
+    private readonly IDistributedCache _cache; // 🔥 EKLENDİ
 
-    // 1. Bildirim servisi tanımı
-    private readonly INotificationService _notificationService; // <-- EKLENDİ
-
-    // 2. Constructor içine enjekte edilmesi
     public UpdateInventoryItemCommandHandler(
         IGenericRepository<InventoryItem> repository,
-        INotificationService notificationService) // <-- EKLENDİ
+        INotificationService notificationService,
+        IDistributedCache cache) // 🔥 EKLENDİ
     {
         _repository = repository;
-        _notificationService = notificationService; // <-- EKLENDİ
+        _notificationService = notificationService;
+        _cache = cache; // 🔥 EŞLEŞTİRİLDİ
     }
 
     public async Task<string> Handle(UpdateInventoryItemCommand request, CancellationToken cancellationToken)
@@ -37,7 +36,6 @@ internal sealed class UpdateInventoryItemCommandHandler : IRequestHandler<Update
         if (entity == null)
             throw new Exception("Güncellenecek malzeme bulunamadı!");
 
-        // Verileri güncelle
         entity.Name = request.Name;
         entity.SkuCode = request.SkuCode;
         entity.StockQuantity = request.StockQuantity;
@@ -46,7 +44,9 @@ internal sealed class UpdateInventoryItemCommandHandler : IRequestHandler<Update
         await _repository.UpdateAsync(entity);
         await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
 
-        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
+        // 👇 🔥 ÇEKMECEYİ TEMİZLİYORUZ (Cache Invalidation)
+        await _cache.RemoveAsync("all_inventory_items_list", cancellationToken);
+
         await _notificationService.SendWorkOrderNotification(
             $"🔄 Envanter Güncellendi: [{entity.SkuCode}] {entity.Name} (Yeni Stok: {entity.StockQuantity})"
         );

@@ -2,55 +2,53 @@
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
-using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisini çağırdık
+using FSM.Application.Interfaces;
+using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS EKLENDİ
 
 namespace FSM.Application.Features.Inventories.Commands.CreateInventoryItem;
 
-// 🔥 1. KOMUT (Command) - Dışarıdan (API'den) gelecek veriler
+// 🔥 1. KOMUT (Command)
 public sealed record CreateInventoryItemCommand(
     string Name,
     string SkuCode,
     int StockQuantity,
-    decimal UnitPrice) : IRequest<int>; // Eklenen malzemenin Id'sini dönüyoruz
+    decimal UnitPrice) : IRequest<int>;
 
-// 🔥 2. İŞLEYİCİ (Handler) - Repository Pattern ile Veritabanına Kayıt
+// 🔥 2. İŞLEYİCİ (Handler)
 internal sealed class CreateInventoryItemCommandHandler : IRequestHandler<CreateInventoryItemCommand, int>
 {
     private readonly IGenericRepository<InventoryItem> _repository;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
+    private readonly IDistributedCache _cache; // 🔥 EKLENDİ
 
-    // 1. Bildirim servisi tanımı
-    private readonly INotificationService _notificationService; // <-- EKLENDİ
-
-    // 2. Constructor içine enjekte edilmesi
     public CreateInventoryItemCommandHandler(
         IGenericRepository<InventoryItem> repository,
         IMapper mapper,
-        INotificationService notificationService) // <-- EKLENDİ
+        INotificationService notificationService,
+        IDistributedCache cache) // 🔥 EKLENDİ
     {
         _repository = repository;
         _mapper = mapper;
-        _notificationService = notificationService; // <-- EKLENDİ
+        _notificationService = notificationService;
+        _cache = cache; // 🔥 EŞLEŞTİRİLDİ
     }
 
     public async Task<int> Handle(CreateInventoryItemCommand request, CancellationToken cancellationToken)
     {
-        // AutoMapper ile Command nesnesini InventoryItem Entity'sine dönüştür
         var entity = _mapper.Map<InventoryItem>(request);
-
-        // 🔥 GÜVENLİK KİLİDİ: Yeni eklenen malzeme asla silinmiş olarak başlayamaz!
         entity.IsDeleted = false;
 
-        // Generic Repository üzerinden veritabanına ekle
         await _repository.AddAsync(entity);
         await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
 
-        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
+        // 👇 🔥 ÇEKMECEYİ TEMİZLİYORUZ (Cache Invalidation)
+        await _cache.RemoveAsync("all_inventory_items_list", cancellationToken);
+
         await _notificationService.SendWorkOrderNotification(
             $"📦 Yeni Malzeme Eklendi: {entity.Name} (Stok: {entity.StockQuantity})"
         );
 
-        // Eklenen malzemenin ID'sini geri dön
         return entity.Id;
     }
 }
