@@ -1,9 +1,10 @@
 ﻿using FSM.Application.Common;
-using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisi için interface'i çağırdık
+using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed; // 🔥 1. REDIS EKLENDİ
 
 namespace FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 
@@ -11,19 +12,19 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
 {
     private readonly IGenericRepository<WorkOrder> _workOrderRepository;
     private readonly IGenericRepository<Technician> _technicianRepository;
+    private readonly INotificationService _notificationService;
+    private readonly IDistributedCache _cache; // 🔥 2. EKLENDİ
 
-    // 1. Bildirim servisi tanımı
-    private readonly INotificationService _notificationService; // <-- EKLENDİ
-
-    // 2. Constructor içine enjekte edilmesi
     public UpdateWorkOrderCommandHandler(
         IGenericRepository<WorkOrder> workOrderRepository,
         IGenericRepository<Technician> technicianRepository,
-        INotificationService notificationService) // <-- EKLENDİ
+        INotificationService notificationService,
+        IDistributedCache cache) // 🔥 3. EKLENDİ
     {
         _workOrderRepository = workOrderRepository;
         _technicianRepository = technicianRepository;
-        _notificationService = notificationService; // <-- EKLENDİ
+        _notificationService = notificationService;
+        _cache = cache; // 🔥 EŞLEŞTİRİLDİ
     }
 
     public async Task<Unit> Handle(UpdateWorkOrderCommand request, CancellationToken cancellationToken)
@@ -51,8 +52,18 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
         // Kaydetme
         await _workOrderRepository.SaveChangesAsync();
 
-        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
-        // Veritabanına başarıyla yazıldıktan sonra tüm bağlı istemcilere haber veriyoruz.
+        // 👇 🔥 ZİNCİRLEME ÇEKMECE TEMİZLİĞİ (Cache Invalidation)
+        await _cache.RemoveAsync("all_work_orders_list", cancellationToken);
+        await _cache.RemoveAsync("all_customers_list", cancellationToken);
+        await _cache.RemoveAsync("all_technicians_list", cancellationToken);
+        await _cache.RemoveAsync("top_technicians_list", cancellationToken);
+
+        if (request.TechnicianId.HasValue && request.TechnicianId.Value > 0)
+        {
+            await _cache.RemoveAsync($"active_orders_for_tech_{request.TechnicianId.Value}", cancellationToken);
+        }
+
+        // Sinyali Ateşliyoruz!
         await _notificationService.SendWorkOrderNotification(
             $"#{workOrder.Id} numaralı iş emri güncellendi!"
         );

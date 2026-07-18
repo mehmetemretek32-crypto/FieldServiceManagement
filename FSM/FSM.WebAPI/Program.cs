@@ -125,6 +125,12 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+//Redisi tanıtma
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "FSM_Cache_"; // Önbellekteki verilerin başına bu ismi ekler, karışıklığı önler
+});
 
 var app = builder.Build();
 

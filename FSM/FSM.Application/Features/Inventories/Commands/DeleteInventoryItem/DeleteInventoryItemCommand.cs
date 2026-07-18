@@ -1,28 +1,27 @@
 ﻿using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
-using FSM.Application.Interfaces; // <-- YENİ: Bildirim servisini çağırdık
+using FSM.Application.Interfaces;
+using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS EKLENDİ
 
 namespace FSM.Application.Features.Inventories.Commands.DeleteInventoryItem;
 
-// 🔥 KOMUT: Sadece silinecek malzemenin Id'si yeterli
 public sealed record DeleteInventoryItemCommand(int Id) : IRequest<string>;
 
-// 🔥 İŞLEYİCİ
 internal sealed class DeleteInventoryItemCommandHandler : IRequestHandler<DeleteInventoryItemCommand, string>
 {
     private readonly IGenericRepository<InventoryItem> _repository;
+    private readonly INotificationService _notificationService;
+    private readonly IDistributedCache _cache; // 🔥 EKLENDİ
 
-    // 1. Bildirim servisi tanımı
-    private readonly INotificationService _notificationService; // <-- EKLENDİ
-
-    // 2. Constructor içine enjekte edilmesi
     public DeleteInventoryItemCommandHandler(
         IGenericRepository<InventoryItem> repository,
-        INotificationService notificationService) // <-- EKLENDİ
+        INotificationService notificationService,
+        IDistributedCache cache) // 🔥 EKLENDİ
     {
         _repository = repository;
-        _notificationService = notificationService; // <-- EKLENDİ
+        _notificationService = notificationService;
+        _cache = cache; // 🔥 EŞLEŞTİRİLDİ
     }
 
     public async Task<string> Handle(DeleteInventoryItemCommand request, CancellationToken cancellationToken)
@@ -32,13 +31,14 @@ internal sealed class DeleteInventoryItemCommandHandler : IRequestHandler<Delete
         if (entity == null)
             throw new Exception("Silinecek malzeme bulunamadı!");
 
-        // Bildirimde kullanmak üzere malzemenin adını bir kenara not alıyoruz
         string itemName = entity.Name;
 
-        await _repository.DeleteAsync(entity); // Repository'ndeki silme metodu neyse onu kullan (Örn: Remove)
+        await _repository.DeleteAsync(entity);
         await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
 
-        // 👇 3. YENİ EKLENEN KISIM: Sinyali Ateşliyoruz!
+        // 👇 🔥 ÇEKMECEYİ TEMİZLİYORUZ (Cache Invalidation)
+        await _cache.RemoveAsync("all_inventory_items_list", cancellationToken);
+
         await _notificationService.SendWorkOrderNotification(
             $"🗑️ Envanterden Malzeme Silindi: {itemName}"
         );

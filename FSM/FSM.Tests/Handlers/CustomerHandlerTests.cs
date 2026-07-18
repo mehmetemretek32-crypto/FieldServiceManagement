@@ -6,8 +6,11 @@ using FSM.Application.Features.Customers.Queries.GetAllCustomers;
 using FSM.Application.Features.Customers.Queries.GetCustomerById;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
+using FSM.Application.Interfaces; // 🔥 Bildirim servisi arayüzü için
+using Microsoft.Extensions.Caching.Distributed; // 🔥 Redis arayüzü için
 using FSM.Tests.TestUtilities;
 using Moq;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace FSM.Tests.Handlers;
 
@@ -15,6 +18,8 @@ public class CreateCustomerCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<Customer>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
+    private readonly Mock<INotificationService> _mockNotificationService = new();
+    private readonly Mock<IDistributedCache> _mockCache = new(); // 🔥 Cache Mock Eklendi
 
     [Fact]
     public async Task Handle_AddsCustomerAndReturnsId()
@@ -24,7 +29,8 @@ public class CreateCustomerCommandHandlerTests
             .Callback<Customer>(c => c.Id = 99)
             .Returns(Task.CompletedTask);
 
-        var handler = new CreateCustomerCommandHandler(_repository.Object, _mapper);
+        // 🔥 Parametre olarak eklendi
+        var handler = new CreateCustomerCommandHandler(_repository.Object, _mapper, _mockNotificationService.Object, _mockCache.Object);
 
         var id = await handler.Handle(new CreateCustomerCommand
         {
@@ -46,8 +52,11 @@ public class UpdateCustomerCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<Customer>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
+    private readonly Mock<INotificationService> _mockNotificationService = new();
+    private readonly Mock<IDistributedCache> _mockCache = new(); // 🔥 Cache Mock Eklendi
 
-    private UpdateCustomerCommandHandler CreateHandler() => new(_repository.Object, _mapper);
+    // 🔥 Parametre olarak eklendi
+    private UpdateCustomerCommandHandler CreateHandler() => new(_repository.Object, _mapper, _mockNotificationService.Object, _mockCache.Object);
 
     [Fact]
     public async Task Handle_UpdatesExistingCustomerFields()
@@ -90,8 +99,11 @@ public class UpdateCustomerCommandHandlerTests
 public class DeleteCustomerCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<Customer>> _repository = new();
+    private readonly Mock<INotificationService> _mockNotificationService = new();
+    private readonly Mock<IDistributedCache> _mockCache = new(); // 🔥 Cache Mock Eklendi
 
-    private DeleteCustomerCommandHandler CreateHandler() => new(_repository.Object);
+    // 🔥 Parametre olarak eklendi
+    private DeleteCustomerCommandHandler CreateHandler() => new(_repository.Object, _mockNotificationService.Object, _mockCache.Object);
 
     [Fact]
     public async Task Handle_SoftDeletesCustomer()
@@ -132,6 +144,7 @@ public class GetAllCustomersQueryHandlerTests
     private readonly Mock<IGenericRepository<Customer>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
     private readonly Mock<IGenericRepository<WorkOrder>> _workOrderRepository = new();
+    private readonly Mock<IDistributedCache> _mockCache = new(); // 🔥 Cache Mock Eklendi
 
     [Fact]
     public async Task Handle_ReturnsOnlyActiveCustomers()
@@ -140,9 +153,15 @@ public class GetAllCustomersQueryHandlerTests
         {
             new() { Id = 1, FirstName = "Active", IsDeleted = false },
             new() { Id = 2, FirstName = "Deleted", IsDeleted = true }
-
         });
-        var handler = new GetAllCustomersQueryHandler(_repository.Object, _workOrderRepository.Object, _mapper);
+
+        // Cache'in boş dönmesini sağlayarak (simüle ederek) doğrudan SQL tarafındaki filtrelere gitmesini test ediyoruz.
+        var handler = new GetAllCustomersQueryHandler(
+            _repository.Object,
+            _workOrderRepository.Object,
+            _mapper,
+            _mockCache.Object); // 🔥 Parametre eklendi
+
         var result = (await handler.Handle(new GetAllCustomersQuery(), CancellationToken.None)).ToList();
 
         Assert.Single(result);
@@ -155,6 +174,7 @@ public class GetCustomerByIdQueryHandlerTests
     private readonly Mock<IGenericRepository<Customer>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
 
+    // Bu sınıfta bir değişiklik yapmadıysan orijinal haliyle kalabilir.
     private GetCustomerByIdQueryHandler CreateHandler() => new(_repository.Object, _mapper);
 
     [Fact]
