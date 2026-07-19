@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FSM.Application.DTOs;
 using FSM.Application.DTOs.WorkOrders;
+using FSM.Application.Features.WorkOrders.Commands.AddMaterialToWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.DeleteWorkOrder;
@@ -77,6 +78,17 @@ namespace FSM.WebAPI.Controllers
             }
 
             return BadRequest("Atama işlemi sırasında bir hata oluştu.");
+        }
+
+        [HttpPost("add-material")]
+        public async Task<IActionResult> AddMaterialToWorkOrder([FromBody] AddMaterialToWorkOrderCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(new
+            {
+                Message = "Malzeme iş emrine başarıyla eklendi ve stoktan otomatik düşüldü.",
+                WorkOrderInventoryId = result
+            });
         }
 
         [HttpDelete("{id}")]
