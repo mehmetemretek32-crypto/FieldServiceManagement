@@ -8,4 +8,6 @@
     public int CustomerId { get; set; }
     public int? TechnicianId { get; set; }
     public string TechnicianName { get; set; } = string.Empty;
+    public DateTime? ScheduledStartDate { get; set; }
+    public DateTime? ScheduledEndDate { get; set; }
 }
