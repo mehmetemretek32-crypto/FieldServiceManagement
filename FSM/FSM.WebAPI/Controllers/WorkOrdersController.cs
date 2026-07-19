@@ -5,6 +5,7 @@ using FSM.Application.Features.WorkOrders.Commands.AddMaterialToWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.AssignWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.CreateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.DeleteWorkOrder;
+using FSM.Application.Features.WorkOrders.Commands.ScheduleWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrder;
 using FSM.Application.Features.WorkOrders.Commands.UpdateWorkOrderStatus;
 using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
@@ -55,7 +56,7 @@ namespace FSM.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = newId }, newId);
         }
 
-        [HttpPut]
+        [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromBody] UpdateWorkOrderCommand command)
         {
             // Artık 'var result' yok, çünkü Unit hiçbir şey döndürmez.
@@ -63,6 +64,17 @@ namespace FSM.WebAPI.Controllers
             await _mediator.Send(command);
 
             return Ok(new { message = "İş emri başarıyla güncellendi." });
+        }
+
+        [HttpPut("schedule")]
+        public async Task<IActionResult> ScheduleWorkOrder([FromBody] ScheduleWorkOrderCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result)
+                return Ok(new { Message = "İş emri takvime başarıyla kaydedildi!" });
+
+            return BadRequest("Takvim güncellenirken bir hata oluştu.");
         }
 
         // Sürükle-Bırak (Drag & Drop) Takvim Atama İşlemi
