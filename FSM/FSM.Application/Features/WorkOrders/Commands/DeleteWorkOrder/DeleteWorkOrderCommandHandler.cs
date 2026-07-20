@@ -32,6 +32,7 @@ public class DeleteWorkOrderCommandHandler : IRequestHandler<DeleteWorkOrderComm
         await _repository.SoftDeleteAsync(request.Id, "iş emri");
 
         // 👇 🔥 ZİNCİRLEME ÇEKMECE TEMİZLİĞİ
+        await _cache.RemoveAsync("dashboard_stats_data", cancellationToken);
         await _cache.RemoveAsync("all_work_orders_list", cancellationToken);
         await _cache.RemoveAsync("all_customers_list", cancellationToken); // Müşterinin iş sayısı azaldı
         await _cache.RemoveAsync("all_technicians_list", cancellationToken); // Teknisyenin aktif iş sayısı azaldı

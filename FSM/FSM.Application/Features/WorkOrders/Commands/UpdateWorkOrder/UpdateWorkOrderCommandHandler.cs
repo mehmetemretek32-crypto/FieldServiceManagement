@@ -53,6 +53,7 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
         await _workOrderRepository.SaveChangesAsync();
 
         // 👇 🔥 ZİNCİRLEME ÇEKMECE TEMİZLİĞİ (Cache Invalidation)
+        await _cache.RemoveAsync("dashboard_stats_data", cancellationToken);
         await _cache.RemoveAsync("all_work_orders_list", cancellationToken);
         await _cache.RemoveAsync("all_customers_list", cancellationToken);
         await _cache.RemoveAsync("all_technicians_list", cancellationToken);
