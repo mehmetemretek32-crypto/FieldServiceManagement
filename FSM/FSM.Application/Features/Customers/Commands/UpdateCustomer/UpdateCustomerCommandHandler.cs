@@ -31,12 +31,12 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
     {
         var customer = await _repository.GetActiveByIdOrThrowAsync(request.Id, "müşteri");
 
-        // Verileri elle atayarak kuryeyi aradan çıkarıyoruz:
-        customer.FirstName = request.Name;
+        customer.FirstName = request.FirstName;
         customer.LastName = request.LastName;
         customer.Email = request.Email;
-        customer.PhoneNumber = request.Phone;
+        customer.PhoneNumber = request.PhoneNumber;
         customer.Address = request.Address;
+        customer.CompanyName = request.CompanyName;
 
         await _repository.UpdateAsync(customer);
         await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥

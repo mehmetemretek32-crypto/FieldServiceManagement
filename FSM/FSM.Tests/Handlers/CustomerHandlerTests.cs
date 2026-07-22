@@ -67,10 +67,10 @@ public class UpdateCustomerCommandHandlerTests
         await CreateHandler().Handle(new UpdateCustomerCommand
         {
             Id = 1,
-            Name = "New",
+            FirstName = "New",
             LastName = "Name",
             Email = "new@example.com",
-            Phone = "+905551112233",
+            PhoneNumber = "+905551112233",
             CompanyName = "Corp",
             Address = "Somewhere"
         }, CancellationToken.None);
@@ -89,7 +89,7 @@ public class UpdateCustomerCommandHandlerTests
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new Customer { Id = 1, IsDeleted = true });
 
         await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
-            new UpdateCustomerCommand { Id = 1, Name = "New", LastName = "Name" },
+            new UpdateCustomerCommand { Id = 1, FirstName = "New", LastName = "Name" },
             CancellationToken.None));
 
         _repository.Verify(r => r.UpdateAsync(It.IsAny<Customer>()), Times.Never);

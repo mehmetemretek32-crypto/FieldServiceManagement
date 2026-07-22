@@ -10,8 +10,10 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
     private readonly IGenericRepository<AppUser> _userRepository;
     private readonly IPasswordHasher _passwordHasher;
 
-    // Constructor (Dependency Injection)
-    public RegisterCommandHandler(IGenericRepository<AppUser> userRepository, IPasswordHasher passwordHasher)
+    // Senin kendi var olan interfacelerin
+    public RegisterCommandHandler(
+        IGenericRepository<AppUser> userRepository,
+        IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -19,25 +21,28 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
 
     public async Task<bool> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        // 1. E-posta adresi zaten kullanılıyor mu kontrolü
+        // 1. E-posta kontrolü
         var existingUser = await _userRepository.GetAsync(u => u.Email == request.Email);
         if (existingUser != null)
         {
             throw new Exception("Bu e-posta adresi zaten sistemde kayıtlı.");
         }
 
-        // 2. Yeni kullanıcı nesnesini oluştur (Tek bir newUser bloğu)
+        // 2. Kullanıcıyı oluştur
         var newUser = new AppUser
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
-            PasswordHash = _passwordHasher.HashPassword(request.Password), // Şifre burada Hash'leniyor!
-            Role = "Technician" // İstemciden gelen rol yok sayılır; güvenli varsayılan atanır.
+            PasswordHash = _passwordHasher.HashPassword(request.Password),
+            Role = "Technician"
         };
 
-        // 3. Repository üzerinden kaydet
+        // 3. İzlemeye al
         await _userRepository.AddAsync(newUser);
+
+        // 4. İŞTE BÜTÜN SORUNU ÇÖZEN SATIR: Senin repository'ndeki Save metodunu çağırıyoruz!
+        await _userRepository.SaveChangesAsync();
 
         return true;
     }

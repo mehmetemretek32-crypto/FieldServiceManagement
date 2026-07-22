@@ -1,0 +1,70 @@
+diff --git a/FSM/FSM.Application/Features/Inventories/Commands/DeleteInventoryItem/DeleteInventoryItemCommand.cs b/FSM/FSM.Application/Features/Inventories/Commands/DeleteInventoryItem/DeleteInventoryItemCommand.cs
+index 54d1125..78e3882 100644
+--- a/FSM/FSM.Application/Features/Inventories/Commands/DeleteInventoryItem/DeleteInventoryItemCommand.cs
++++ b/FSM/FSM.Application/Features/Inventories/Commands/DeleteInventoryItem/DeleteInventoryItemCommand.cs
+@@ -1,6 +1,7 @@
+ ﻿using FSM.Domain.Entities;
+ using FSM.Domain.Interfaces;
+ using MediatR;
++using FSM.Application.Common;
+ using FSM.Application.Interfaces;
+ using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS EKLENDİ
+ 
+@@ -33,8 +34,9 @@ internal sealed class DeleteInventoryItemCommandHandler : IRequestHandler<Delete
+ 
+         string itemName = entity.Name;
+ 
+-        await _repository.DeleteAsync(entity);
+-        await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
++        // Diğer modüllerle (Customer, WorkOrder, Technician) tutarlı olması için
++        // artık kalıcı silme yerine soft-delete kullanılıyor.
++        await _repository.SoftDeleteAsync(request.Id, "malzeme");
+ 
+         // 👇 🔥 ÇEKMECEYİ TEMİZLİYORUZ (Cache Invalidation)
+         await _cache.RemoveAsync("all_inventory_items_list", cancellationToken);
+diff --git a/FSM/FSM.Application/Features/Inventories/Queries/GetAllInventoryItems/GetAllInventoryItemsQuery.cs b/FSM/FSM.Application/Features/Inventories/Queries/GetAllInventoryItems/GetAllInventoryItemsQuery.cs
+index c32e077..ab1dda7 100644
+--- a/FSM/FSM.Application/Features/Inventories/Queries/GetAllInventoryItems/GetAllInventoryItemsQuery.cs
++++ b/FSM/FSM.Application/Features/Inventories/Queries/GetAllInventoryItems/GetAllInventoryItemsQuery.cs
+@@ -1,4 +1,5 @@
+ ﻿using AutoMapper;
++using FSM.Application.Common;
+ using FSM.Application.DTOs;
+ using FSM.Domain.Entities;
+ using FSM.Domain.Interfaces;
+@@ -45,7 +46,8 @@ public class GetAllInventoryItemsQueryHandler : IRequestHandler<GetAllInventoryI
+ 
+         // 🔥 AŞAMA 2: ÇEKMECE BOŞSA VERİTABANINA GİT
+         var items = await _repository.GetAllAsync();
+-        var dtoList = _mapper.Map<IEnumerable<InventoryItemDto>>(items);
++        var activeItems = items.OnlyActive();
++        var dtoList = _mapper.Map<IEnumerable<InventoryItemDto>>(activeItems);
+ 
+         // 🔥 AŞAMA 3: SONUCU ÇEKMECEYE KOY (10 Dakika taze kalsın)
+         var cacheOptions = new DistributedCacheEntryOptions
+diff --git a/FSM/FSM.Application/Features/Inventories/Queries/GetInventoryItemById/GetInventoryItemByIdQuery.cs b/FSM/FSM.Application/Features/Inventories/Queries/GetInventoryItemById/GetInventoryItemByIdQuery.cs
+index 78d15af..b80aee4 100644
+--- a/FSM/FSM.Application/Features/Inventories/Queries/GetInventoryItemById/GetInventoryItemByIdQuery.cs
++++ b/FSM/FSM.Application/Features/Inventories/Queries/GetInventoryItemById/GetInventoryItemByIdQuery.cs
+@@ -25,7 +25,7 @@ internal sealed class GetInventoryItemByIdQueryHandler : IRequestHandler<GetInve
+     {
+         var item = await _repository.GetByIdAsync(request.Id);
+ 
+-        if (item == null)
++        if (item == null || item.IsDeleted)
+             throw new Exception("Malzeme bulunamadı!"); // İleride buraya özel NotFoundException yazılabilir
+ 
+         return _mapper.Map<InventoryItemDto>(item);
+diff --git a/FSM/FSM.Domain/Entities/InventoryItem.cs b/FSM/FSM.Domain/Entities/InventoryItem.cs
+index 9d7944d..25311a9 100644
+--- a/FSM/FSM.Domain/Entities/InventoryItem.cs
++++ b/FSM/FSM.Domain/Entities/InventoryItem.cs
+@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
+ 
+ namespace FSM.Domain.Entities;
+ 
+-public class InventoryItem : BaseEntity
++public class InventoryItem : BaseEntity, ISoftDeletable
+ {
+     public string Name { get; set; } = string.Empty;
+     public string SkuCode { get; set; } = string.Empty; // Stok Barkodu (Örn: KBL-001)

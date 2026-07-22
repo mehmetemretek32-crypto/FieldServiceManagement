@@ -10,7 +10,7 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
         RuleFor(x => x.Id)
             .GreaterThan(0).WithMessage("Geçerli bir müşteri ID'si girilmelidir.");
 
-        RuleFor(x => x.Name)
+        RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("Müşteri adı boş bırakılamaz.")
             .MinimumLength(2).WithMessage("Müşteri adı en az 2 karakter olmalıdır.");
 
@@ -21,7 +21,7 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
             .NotEmpty().WithMessage("E-posta adresi boş bırakılamaz.")
             .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
 
-        RuleFor(x => x.Phone)
+        RuleFor(x => x.PhoneNumber)
             .NotEmpty().WithMessage("Telefon numarası boş bırakılamaz.")
             .Matches(@"^\+?\d{10,15}$").WithMessage("Geçerli bir telefon numarası giriniz.");
 

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FSM.Domain.Entities;
 
-public class InventoryItem : BaseEntity
+public class InventoryItem : BaseEntity, ISoftDeletable
 {
     public string Name { get; set; } = string.Empty;
     public string SkuCode { get; set; } = string.Empty; // Stok Barkodu (Örn: KBL-001)

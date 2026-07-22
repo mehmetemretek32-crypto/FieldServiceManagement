@@ -57,12 +57,12 @@ namespace FSM.WebAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromBody] UpdateWorkOrderCommand command)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateWorkOrderCommand command)
         {
-            // Artık 'var result' yok, çünkü Unit hiçbir şey döndürmez.
-            // İşlem başarılıysa buraya kadar gelir, hata varsa zaten Exception fırlatır.
-            await _mediator.Send(command);
+            if (id != command.Id)
+                return BadRequest(new { message = "URL'deki id ile gönderilen kaydın id'si eşleşmiyor." });
 
+            await _mediator.Send(command);
             return Ok(new { message = "İş emri başarıyla güncellendi." });
         }
 

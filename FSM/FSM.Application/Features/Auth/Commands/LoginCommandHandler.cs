@@ -1,10 +1,7 @@
 ﻿using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
-using FSM.Domain.Interfaces; // IGenericRepository için
+using FSM.Domain.Interfaces;
 using MediatR;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNetCore.Identity;
-using IPasswordHasher = FSM.Application.Interfaces.IPasswordHasher;
 
 namespace FSM.Application.Features.Auth.Commands;
 
@@ -14,7 +11,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
     private readonly ITokenService _tokenService;
     private readonly IPasswordHasher _passwordHasher;
 
-    public LoginCommandHandler(IGenericRepository<AppUser> userRepository, ITokenService tokenService, IPasswordHasher passwordHasher)
+    // Yine sadece senin sisteminde var olan interfaceler
+    public LoginCommandHandler(
+        IGenericRepository<AppUser> userRepository,
+        ITokenService tokenService,
+        IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
@@ -23,9 +24,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
 
     public async Task<string> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        // 1. Kullanıcıyı bul
         var user = await _userRepository.GetAsync(u => u.Email == request.Email);
 
-        // Açık metin kontrolü (user.PasswordHash != request.Password) YERİNE Hash kontrolü yapıyoruz:
+        // 2. Kullanıcı yoksa veya şifre (Hash üzerinden) yanlışsa
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             throw new Exception("E-posta adresi veya şifre hatalı.");

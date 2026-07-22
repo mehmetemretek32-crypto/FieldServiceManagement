@@ -102,10 +102,10 @@ public class UpdateCustomerValidatorTests
     private static UpdateCustomerCommand ValidCommand() => new()
     {
         Id = 1,
-        Name = "Ada",
+        FirstName = "Ada",
         LastName = "Lovelace",
         Email = "ada@example.com",
-        Phone = "+905551112233",
+        PhoneNumber = "+905551112233",
         CompanyName = "Analytical Engines",
         Address = "London"
     };

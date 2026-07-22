@@ -49,6 +49,11 @@ public class UpdateWorkOrderCommandHandler : IRequestHandler<UpdateWorkOrderComm
         workOrder.TechnicianId = request.TechnicianId;
         workOrder.CustomerId = request.CustomerId;
 
+        if (request.ScheduledStartDate.HasValue)
+            workOrder.ScheduledStartDate = request.ScheduledStartDate;
+
+        if (request.ScheduledEndDate.HasValue)
+            workOrder.ScheduledEndDate = request.ScheduledEndDate;
         // Kaydetme
         await _workOrderRepository.SaveChangesAsync();
 

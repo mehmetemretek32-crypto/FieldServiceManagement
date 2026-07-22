@@ -1,6 +1,7 @@
 ﻿using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
+using FSM.Application.Common;
 using FSM.Application.Interfaces;
 using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS EKLENDİ
 
@@ -33,8 +34,9 @@ internal sealed class DeleteInventoryItemCommandHandler : IRequestHandler<Delete
 
         string itemName = entity.Name;
 
-        await _repository.DeleteAsync(entity);
-        await _repository.SaveChangesAsync(); // Fırın çalıştı 🔥
+        // Diğer modüllerle (Customer, WorkOrder, Technician) tutarlı olması için
+        // artık kalıcı silme yerine soft-delete kullanılıyor.
+        await _repository.SoftDeleteAsync(request.Id, "malzeme");
 
         // 👇 🔥 ÇEKMECEYİ TEMİZLİYORUZ (Cache Invalidation)
         await _cache.RemoveAsync("all_inventory_items_list", cancellationToken);

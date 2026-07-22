@@ -25,7 +25,7 @@ internal sealed class GetInventoryItemByIdQueryHandler : IRequestHandler<GetInve
     {
         var item = await _repository.GetByIdAsync(request.Id);
 
-        if (item == null)
+        if (item == null || item.IsDeleted)
             throw new Exception("Malzeme bulunamadı!"); // İleride buraya özel NotFoundException yazılabilir
 
         return _mapper.Map<InventoryItemDto>(item);

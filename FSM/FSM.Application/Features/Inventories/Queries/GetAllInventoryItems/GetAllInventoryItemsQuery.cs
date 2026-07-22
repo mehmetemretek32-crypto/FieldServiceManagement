@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FSM.Application.Common;
 using FSM.Application.DTOs;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
@@ -45,7 +46,8 @@ public class GetAllInventoryItemsQueryHandler : IRequestHandler<GetAllInventoryI
 
         // 🔥 AŞAMA 2: ÇEKMECE BOŞSA VERİTABANINA GİT
         var items = await _repository.GetAllAsync();
-        var dtoList = _mapper.Map<IEnumerable<InventoryItemDto>>(items);
+        var activeItems = items.OnlyActive();
+        var dtoList = _mapper.Map<IEnumerable<InventoryItemDto>>(activeItems);
 
         // 🔥 AŞAMA 3: SONUCU ÇEKMECEYE KOY (10 Dakika taze kalsın)
         var cacheOptions = new DistributedCacheEntryOptions
