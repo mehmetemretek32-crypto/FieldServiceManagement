@@ -7,4 +7,9 @@ public record TechnicianDto(
     string PhoneNumber,
     bool IsAvailable,
     int ActiveWorkOrdersCount
-);
+)
+{
+    // AutoMapper'ın nesneyi üretebilmesi için gereken boş yapıcı metot (Parametresiz Constructor).
+    // Projenin geri kalanında yazılmış hiçbir kodu BOZMAZ.
+    public TechnicianDto() : this(default, string.Empty, string.Empty, string.Empty, default, default) { }
+}

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Caching.Distributed; // 🔥 Redis arayüzü için
 using FSM.Tests.TestUtilities;
 using Moq;
 using Microsoft.Extensions.Caching.Distributed;
+using FSM.Application.Common;
 
 namespace FSM.Tests.Handlers;
 
@@ -88,7 +89,7 @@ public class UpdateCustomerCommandHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new Customer { Id = 1, IsDeleted = true });
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new UpdateCustomerCommand { Id = 1, FirstName = "New", LastName = "Name" },
             CancellationToken.None));
 
@@ -123,7 +124,7 @@ public class DeleteCustomerCommandHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((Customer?)null);
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new DeleteCustomerCommand { Id = 1 }, CancellationToken.None));
     }
 
@@ -132,7 +133,7 @@ public class DeleteCustomerCommandHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new Customer { Id = 1, IsDeleted = true });
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new DeleteCustomerCommand { Id = 1 }, CancellationToken.None));
 
         _repository.Verify(r => r.UpdateAsync(It.IsAny<Customer>()), Times.Never);
@@ -195,7 +196,7 @@ public class GetCustomerByIdQueryHandlerTests
         _repository.Setup(r => r.GetByIdAsync(1))
             .ReturnsAsync(new Customer { Id = 1, IsDeleted = true });
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new GetCustomerByIdQuery { Id = 1 }, CancellationToken.None));
     }
 }

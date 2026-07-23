@@ -10,6 +10,7 @@ using FSM.Application.Interfaces; // 🔥 Bildirim servisi için
 using Microsoft.Extensions.Caching.Distributed; // 🔥 Redis için
 using FSM.Tests.TestUtilities;
 using Moq;
+using FSM.Application.Common;
 
 namespace FSM.Tests.Handlers;
 
@@ -77,7 +78,7 @@ public class UpdateTechnicianCommandHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new Technician { Id = 1, IsDeleted = true });
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new UpdateTechnicianCommand { Id = 1, FullName = "New" }, CancellationToken.None));
 
         _repository.Verify(r => r.UpdateAsync(It.IsAny<Technician>()), Times.Never);
@@ -111,7 +112,7 @@ public class DeleteTechnicianCommandHandlerTests
     {
         _repository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((Technician?)null);
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new DeleteTechnicianCommand { Id = 1 }, CancellationToken.None));
     }
 }
@@ -169,7 +170,7 @@ public class GetTechnicianByIdQueryHandlerTests
         _repository.Setup(r => r.GetByIdAsync(1))
             .ReturnsAsync(new Technician { Id = 1, IsDeleted = true });
 
-        await Assert.ThrowsAsync<Exception>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => CreateHandler().Handle(
             new GetTechnicianByIdQuery { Id = 1 }, CancellationToken.None));
     }
 }

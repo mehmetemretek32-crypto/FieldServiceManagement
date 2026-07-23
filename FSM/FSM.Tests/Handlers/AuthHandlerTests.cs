@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using FSM.Application.Common;
 using FSM.Application.Features.Auth.Commands;
 using FSM.Application.Interfaces;
 using FSM.Domain.Entities;
