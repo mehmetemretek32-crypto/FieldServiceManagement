@@ -89,6 +89,7 @@ builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSch
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 
 // Kapıdaki Bodyguard'ı (Validator) sisteme tanıtıyoruz
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTechnicianCommandValidator>();

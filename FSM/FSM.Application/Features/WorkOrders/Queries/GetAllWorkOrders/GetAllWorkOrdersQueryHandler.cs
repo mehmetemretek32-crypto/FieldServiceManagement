@@ -3,63 +3,93 @@ using FSM.Application.DTOs.WorkOrders;
 using FSM.Domain.Entities;
 using FSM.Domain.Interfaces;
 using MediatR;
-using Microsoft.EntityFrameworkCore; // 🔥 BÜYÜK SIR BURADA! (Include için gerekli)
-using Microsoft.Extensions.Caching.Distributed; // 🔥 REDIS İÇİN EKLENDİ
-using System.Text.Json; // 🔥 JSON DÖNÜŞÜMLERİ İÇİN EKLENDİ
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.IdentityModel.JsonWebTokens; 
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
 
 public class GetAllWorkOrdersQueryHandler : IRequestHandler<GetAllWorkOrdersQuery, IEnumerable<WorkOrderDto>>
 {
     private readonly IGenericRepository<WorkOrder> _workOrderRepository;
+    private readonly IGenericRepository<Technician> _technicianRepository; // 🆕
     private readonly IMapper _mapper;
-    private readonly IDistributedCache _cache; // 🔥 1. Redis servisimizi tanımlıyoruz
+    private readonly IDistributedCache _cache;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    // 🔥 2. Constructor'a IDistributedCache eklendi ve içeriye alındı
-    public GetAllWorkOrdersQueryHandler(IGenericRepository<WorkOrder> workOrderRepository, IMapper mapper, IDistributedCache cache)
+    public GetAllWorkOrdersQueryHandler(
+        IGenericRepository<WorkOrder> workOrderRepository,
+        IGenericRepository<Technician> technicianRepository, // 🆕
+        IMapper mapper,
+        IDistributedCache cache,
+        IHttpContextAccessor httpContextAccessor)
     {
         _workOrderRepository = workOrderRepository;
+        _technicianRepository = technicianRepository; // 🆕
         _mapper = mapper;
         _cache = cache;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<IEnumerable<WorkOrderDto>> Handle(GetAllWorkOrdersQuery request, CancellationToken cancellationToken)
     {
-        // 🔥 3. Redis'teki çekmecemizin (Cache) üstünde yazacak etiket ismi
-        const string cacheKey = "all_work_orders_list";
+        var user = _httpContextAccessor.HttpContext?.User;
+        var role = user?.FindFirst(ClaimTypes.Role)?.Value;
 
-        // 🔥 4. AŞAMA 1: ÖNCE REDIS'E (ÇEKMECEYE) BAK
+        // 🆕 Teknisyen ise: AppUser'daki e-posta ile Technician tablosundaki e-postayı eşleştirip
+        // gerçek Technician.Id'yi buluyoruz (AppUser.Id ile Technician.Id birbiriyle ilişkili değil!)
+        int? currentTechnicianId = null;
+        if (role == "Technician")
+        {
+            var email = user?.FindFirst("email")?.Value
+              ?? user?.FindFirst(ClaimTypes.Email)?.Value;
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                var technician = await _technicianRepository.GetAsync(t => t.Email == email);
+                currentTechnicianId = technician?.Id;
+            }
+        }
+
+        string cacheKey = role == "Technician"
+            ? $"work_orders_list_tech_{currentTechnicianId}"
+            : "all_work_orders_list";
+
         var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
         {
-            // Çekmecede veri var! SQL'e hiç gitmeden, JSON'ı DTO listesine çevirip fişek gibi döndürüyoruz.
             return JsonSerializer.Deserialize<IEnumerable<WorkOrderDto>>(cachedData);
         }
 
-        // 🔥 5. AŞAMA 2: ÇEKMECE BOŞSA SQL'E GİT (Senin orijinal, temiz kodun)
         var query = _workOrderRepository.GetAllAsQueryable();
 
-        var workOrders = await query
+        var filteredQuery = query
                  .Include(w => w.Technician)
-                 .Where(w => !w.IsDeleted)
-                 .ToListAsync(cancellationToken);
+                 .Where(w => !w.IsDeleted);
 
-        // Veriyi DTO'ya dönüştür
+        if (role == "Technician")
+        {
+            // currentTechnicianId null ise (eşleşme bulunamadıysa) kasıtlı olarak boş liste dönsün —
+            // yanlışlıkla tüm listeyi göstermesin.
+            filteredQuery = filteredQuery.Where(w => w.TechnicianId == currentTechnicianId);
+        }
+
+        var workOrders = await filteredQuery.ToListAsync(cancellationToken);
+
         var mappedWorkOrders = _mapper.Map<IEnumerable<WorkOrderDto>>(workOrders);
 
-        // 🔥 6. AŞAMA 3: SQL'DEN ALINAN VERİYİ BİR SONRAKİ İSTEK İÇİN REDIS'E KAYDET
         var cacheOptions = new DistributedCacheEntryOptions
         {
-            // Veri Redis'te 10 dakika taze kalsın, sonra otomatik silinsin
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
         };
 
-        // Elimizdeki DTO listesini JSON metnine çevirip Redis'e atıyoruz
         var serializedData = JsonSerializer.Serialize(mappedWorkOrders);
         await _cache.SetStringAsync(cacheKey, serializedData, cacheOptions, cancellationToken);
 
-        // Arayüze veriyi teslim et
         return mappedWorkOrders;
     }
 }

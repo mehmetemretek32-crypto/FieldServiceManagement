@@ -13,7 +13,7 @@ namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize]
+[Authorize]
 public class TechniciansController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -24,7 +24,7 @@ public class TechniciansController : ControllerBase
     }
 
     // --- GENEL TEKNİSYEN OPERASYONLARI ---
-
+    [Authorize(Roles = "Admin,Dispatcher")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -40,7 +40,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpPost]
-   // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateTechnicianCommand command)
     {
         var result = await _mediator.Send(command);
@@ -48,7 +48,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpPut]
-   // [Authorize(Roles = "Admin")]
+   [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update([FromBody] UpdateTechnicianCommand command)
     {
         await _mediator.Send(command);
@@ -56,7 +56,7 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         await _mediator.Send(new DeleteTechnicianCommand { Id = id });
@@ -80,7 +80,7 @@ public class TechniciansController : ControllerBase
 
     // 2. TEKNİSYENE ATANMIŞ İŞ EMİRLERİNİ GETİR (Teknisyen Kendi İşlerini Görür)
     // GET: api/Technicians/5/workorders
-   // [Authorize(Roles = "Technician,Admin")]
+   [Authorize(Roles = "Technician,Admin")]
     [HttpGet("{id}/workorders")]
     public async Task<IActionResult> GetWorkOrdersByTechnician(int id)
     {
@@ -89,7 +89,7 @@ public class TechniciansController : ControllerBase
     }
 
     // 3. ADMİN ÖZEL: TÜM TEKNİSYENLER (Silinmişler / Pasifler Dahil Performans Raporu)
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("admin/all-with-performance")]
     public IActionResult GetAllTechniciansAdmin()
     {

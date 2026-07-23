@@ -10,17 +10,17 @@ using FSM.Application.Features.WorkOrders.Queries.GetAllWorkOrders;
 using FSM.Application.Features.WorkOrders.Queries.GetMyActiveWorkOrders;
 using FSM.Application.Features.WorkOrders.Queries.GetWorkOrderById;
 using FSM.Application.Interfaces;
+using FSM.Application.Interfaces; // 🔥 Bildirim servisi için eklendi
 using FSM.Domain.Entities;
 using FSM.Domain.Enums;
 using FSM.Domain.Interfaces;
 using FSM.Tests.TestUtilities;
 using Microsoft.Extensions.Caching.Distributed;
-using Moq;
-using SharedCreateValidator = FSM.Application.Validators.CreateWorkOrderCommandValidator;
-using FSM.Application.Interfaces; // 🔥 Bildirim servisi için eklendi
 using Microsoft.Extensions.Caching.Distributed; // 🔥 Redis önbellek için eklendi
 using Microsoft.Extensions.Caching.Distributed; // 🔥 Redis Mock işlemleri için eklendi
-
+using Moq;
+using SharedCreateValidator = FSM.Application.Validators.CreateWorkOrderCommandValidator;
+using Microsoft.AspNetCore.Http;
 namespace FSM.Tests.Handlers;
 
 public class AssignWorkOrderCommandHandlerTests
@@ -240,23 +240,26 @@ public class UpdateWorkOrderStatusCommandHandlerTests
 public class GetAllWorkOrdersQueryHandlerTests
 {
     private readonly Mock<IGenericRepository<WorkOrder>> _repository = new();
+    private readonly Mock<IGenericRepository<Technician>> _technicianRepository = new(); // 🆕
     private readonly IMapper _mapper = MapperFactory.Create();
-    private readonly Mock<IDistributedCache> _mockCache = new(); // 🔥 Eklendi
+    private readonly Mock<IDistributedCache> _mockCache = new();
+    private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor = new(); // 🆕
 
     [Fact]
     public async Task Handle_MapsAllWorkOrders()
     {
-        // Not: Handler içinde EntityFramework Core'un '.Include()' metodu çalışacaksa,
-        // Mock nesnenin 'GetAllAsQueryable()' ayarlamalarını da ileride yapman gerekebilir.
-        // Şimdilik sadece parametre hatası çözülmüştür.
         _repository.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<WorkOrder>
         {
             new() { Id = 1, Title = "A", State = WorkOrderState.Pending },
             new() { Id = 2, Title = "B", State = WorkOrderState.Completed }
         });
 
-        // 🔥 Parametre eklendi
-        var handler = new GetAllWorkOrdersQueryHandler(_repository.Object, _mapper, _mockCache.Object);
+        var handler = new GetAllWorkOrdersQueryHandler(
+            _repository.Object,
+            _technicianRepository.Object, // 🆕
+            _mapper,
+            _mockCache.Object,
+            _mockHttpContextAccessor.Object); // 🆕
 
         var result = (await handler.Handle(new GetAllWorkOrdersQuery(), CancellationToken.None)).ToList();
 
@@ -270,7 +273,7 @@ public class GetMyActiveWorkOrdersQueryHandlerTests
     private readonly Mock<IGenericRepository<WorkOrder>> _repository = new();
     private readonly IMapper _mapper = MapperFactory.Create();
     private readonly Mock<IDistributedCache> _mockCache = new(); // 🔥 Eklendi
-
+     // 🆕 RBAC testi için eklendi
     [Fact]
     public async Task Handle_ReturnsOnlyTechniciansNonDeletedOrders()
     {

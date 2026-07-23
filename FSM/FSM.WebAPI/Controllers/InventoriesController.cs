@@ -1,15 +1,17 @@
 ﻿using FSM.Application.Features.Inventories.Commands.CreateInventoryItem;
-using FSM.Application.Features.Inventories.Commands.UpdateInventoryItem;
 using FSM.Application.Features.Inventories.Commands.DeleteInventoryItem;
+using FSM.Application.Features.Inventories.Commands.UpdateInventoryItem;
 using FSM.Application.Features.Inventories.Queries.GetAllInventoryItems;
 using FSM.Application.Features.Inventories.Queries.GetInventoryItemById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class InventoriesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -20,6 +22,7 @@ public class InventoriesController : ControllerBase
     }
 
     // 1. LİSTELEME
+    [Authorize(Roles = "Admin,Dispatcher,Technician")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

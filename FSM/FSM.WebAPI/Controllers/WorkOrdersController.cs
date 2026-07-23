@@ -20,7 +20,7 @@ namespace FSM.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class WorkOrdersController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -32,6 +32,8 @@ namespace FSM.WebAPI.Controllers
             _mapper = mapper;
         }
 
+
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WorkOrderDto>>> GetAll()
         {
@@ -104,14 +106,14 @@ namespace FSM.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _mediator.Send(new DeleteWorkOrderCommand { Id = id });
             return Ok(new { message = "İş emri başarıyla iptal edildi/pasife çekildi." });
         }
 
-       // [Authorize(Roles = "Technician,Admin")] // Hem teknisyen hem admin değiştirebilsin
+       [Authorize(Roles = "Technician,Admin")] // Hem teknisyen hem admin değiştirebilsin
         [HttpPatch("status")]
         public async Task<IActionResult> UpdateStatus([FromBody] UpdateWorkOrderStatusCommand command)
         {
@@ -119,7 +121,7 @@ namespace FSM.WebAPI.Controllers
             return Ok(new { Message = "İş emri durumu başarıyla güncellendi!" });
         }
 
-        //[Authorize(Roles = "Technician,Admin")]
+        [Authorize(Roles = "Technician,Admin")]
         [HttpGet("my-tasks")]
         public async Task<ActionResult<IEnumerable<WorkOrderDto>>> GetMyTasks()
         {

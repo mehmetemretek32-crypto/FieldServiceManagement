@@ -11,7 +11,7 @@ namespace FSM.WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize]
+[Authorize]
 public class CustomersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -22,7 +22,7 @@ public class CustomersController : ControllerBase
     }
 
     // --- GENEL MÜŞTERİ OPERASYONLARI ---
-
+    [Authorize(Roles = "Admin,Dispatcher")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
