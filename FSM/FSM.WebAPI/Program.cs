@@ -41,6 +41,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 // --- 3. CONTROLLER (GARSON), CORS VE SWAGGER (VİTRİN) KAYITLARI ---
 builder.Services.AddControllers();
